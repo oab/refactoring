@@ -3,18 +3,19 @@ plugins {
     id 'application'
 }
 
-repositories {
-   flatDir {
-       dirs 'libs'
-   }
-}
-
 application {
     mainClassName = 'refactoring.Main'
 }
 
 
+// For now this should work, but the build should depend on
+// the source of the git repo; fetch, build and use.
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
 
-//dependencies {
-//  compile files('libs/frontend.jar')
-//}
+dependencies {
+  implementation files('libs/absfrontend.jar')
+}
