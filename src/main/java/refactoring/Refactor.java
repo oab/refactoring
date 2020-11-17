@@ -20,7 +20,7 @@ public class Refactor {
     // args[1] Class (e.g Foo)
     // args[2] Method (e.g. bar)
     // args[4] call at line (e.g. 3)
-    public static void  main(String args[]) {
+    public static void main(String args[]) {
         File in = new File(args[0]);
         ArrayList<File> files  = new ArrayList<>();
         files.add(in);
@@ -28,6 +28,7 @@ public class Refactor {
         Main entry = new Main();
         try {
             Model m = entry.parse(files);
+            m.lookupModule("HideDelegate").getDecl(3).dump(System.out);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (WrongProgramArgumentException e) {
@@ -35,6 +36,7 @@ public class Refactor {
         } catch (InternalBackendException e) {
             e.printStackTrace();
         }
+
 
     }
 
