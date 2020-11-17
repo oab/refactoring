@@ -4,12 +4,23 @@ plugins {
 }
 
 application {
-    mainClassName = 'refactoring.Main'
+    mainClassName = 'refactoring.Refactor'
+}
+
+
+// Broken atm, need to fix this so I can actually run stuff from this
+// the problem is that dependencies are not compiled and moved to the jar
+jar {
+    manifest {
+        attributes 'Main-Class': 'refactoring.Refactor',
+                   'Class-Path': 'absfrontend.jar'
+    }
 }
 
 
 // For now this should work, but the build should depend on
 // the source of the git repo; fetch, build and use.
+
 repositories {
     flatDir {
         dirs 'libs'
@@ -17,5 +28,5 @@ repositories {
 }
 
 dependencies {
-  implementation files('libs/absfrontend.jar')
+    implementation files('libs/absfrontend.jar')
 }
