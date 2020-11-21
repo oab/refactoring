@@ -2,7 +2,7 @@ import java.io.File;
 import java.util.Collections;
 import org.junit.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.*;
