@@ -4,8 +4,10 @@ import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.prettyprint.ABSFormatter;
 import org.abs_models.backend.prettyprint.DefaultABSFormatter;
 import org.abs_models.common.WrongProgramArgumentException;
+import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
+import org.abs_models.frontend.typechecker.KindedName;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.io.File;
 import java.util.ArrayList;
 import java.io.PrintWriter;
+import java.util.Iterator;
 
 public class Refactor {
 
@@ -67,9 +70,14 @@ public class Refactor {
     // 1. Traverse to class
     // 2. Traverse to method in class
     public static Model hideDelegate(Model m, String classname, String methodname) {
+        KindedName className = new KindedName(KindedName.Kind.CLASS,classname);
+        KindedName functionName = new KindedName(KindedName.Kind.FUN,methodname);
+
 
 
         return m;
+
+
     }
 
 
