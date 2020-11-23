@@ -23,13 +23,14 @@ public class Refactor {
     // args[0] Module
     // args[1] Class
     // args[2] Method
-    // args[3] call at line
-    // args[4]... file(s)
+    // args[3] varname1
+    // args[4] varname2
+    // args[5]... file(s)
     public static void main(String args[]) {
 
         // TODO: Proper argument handling?
-        if(args.length != 5) {
-            System.out.println("Expected: Module Class Method File");
+        if(args.length != 7) {
+            System.out.println("Expected: Module Class Method AssignVar TargetVar MethodCall File");
             System.exit(1);
         }
 
@@ -38,11 +39,11 @@ public class Refactor {
         //TODO: Is the exception handling really needed?
         try {
 
-            Model m = entry.parse(Collections.singletonList(new File(args[4])));
-            PrintWriter writer = new PrintWriter(new File(args[4]+".after"));
+            Model m = entry.parse(Collections.singletonList(new File(args[6])));
+            PrintWriter writer = new PrintWriter(new File(args[6]+".after"));
             ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-            hideDelegate(m,args[0],args[1],args[2],Integer.parseInt(args[3]))
+            hideDelegate(m,args[0],args[1],args[2],args[3],args[4],args[5])
                     .doPrettyPrint(writer,formatter);
 
         } catch (IOException e) {
@@ -59,7 +60,8 @@ public class Refactor {
     }
 
     // TODO: implement refactoring i.e. Model -> transformed Model
-    public static Model hideDelegate(Model m, String moduleName, String className, String methodName, int line)
+    public static Model hideDelegate(Model m, String moduleName, String className, String methodName,
+                                     String assignVar, String targetVar, String methodCall)
             throws RefactoringException {
 
         ModuleDecl mDecl = m.lookupModule(moduleName);
@@ -77,33 +79,31 @@ public class Refactor {
             throw new RefactoringException(String.format("Method by name %s not found", methodName));
         }
 
-        Stmt stmt1 = mImpl.getBlock().getStmt(line);
-        Stmt stmt2 = mImpl.getBlock().getStmt(line+1);
+        // Matching against e.g
+        // 1. d = p.getDept();
+        // 2. m = d.getManager();
 
-        if(stmt1 == null) {
-            throw new RefactoringException(String.format("No line %i in method %s", line, methodName));
-        }
+        Iterator<Stmt> stmts = mImpl.getBlock().getStmts().iterator();
 
-        if(stmt2 == null) {
-            throw new RefactoringException(String.format("No line %i in method %s", line+1, methodName));
-        }
-
-        // Use https://openjdk.java.net/jeps/305 ? or make 1.8 compatible
-        if(stmt1 instanceof AssignStmt) {
-
-            if (stmt2 instanceof AssignStmt) {
-              // further checking
-
-            } else {
-                throw new RefactoringException(String.format("Line %d in method %s is not an assignment", line + 1, methodName));
+        // Match 1.
+        while (stmts.hasNext()) {
+            if(stmts.next() instanceof AssignStmt astmt1 &&
+               astmt1.getVar().getName().equals(assignVar) &&
+               astmt1.getValue() instanceof SyncCall syncallstmt1 &&
+               syncallstmt1.getMethod().equals(methodCall) &&
+               syncallstmt1.getCalleeNoTransform() instanceof VarUse v1 &&
+               v1.getName().equals(targetVar) &&
+               stmts.next() instanceof AssignStmt astmt2 &&
+               astmt2.getValue() instanceof SyncCall syncallstmt2 &&
+               syncallstmt2.getCalleeNoTransform() instanceof VarUse v2 &&
+               v2.getName().equals(assignVar)) {
+                return m;
             }
-        } else {
-            throw new RefactoringException(String.format("Line %d in method %s is not an assignment", line,methodName));
         }
 
+        // For better error the conjunction above needs to be inspected
+        throw new RefactoringException(String.format("Name mismatch"));
 
-
-        return m;
 
     }
 
