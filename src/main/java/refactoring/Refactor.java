@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.io.PrintWriter;
 import java.io.File;
+import java.util.Iterator;
 
 public class Refactor {
 
@@ -27,7 +28,7 @@ public class Refactor {
     public static void main(String args[]) {
 
         // TODO: Proper argument handling?
-        if(args.length != 4) {
+        if(args.length != 5) {
             System.out.println("Expected: Module Class Method File");
             System.exit(1);
         }
@@ -37,11 +38,12 @@ public class Refactor {
         //TODO: Is the exception handling really needed?
         try {
 
-            Model m = entry.parse(Collections.singletonList(new File(args[3])));
-            PrintWriter writer = new PrintWriter(new File(args[3]+".after"));
+            Model m = entry.parse(Collections.singletonList(new File(args[4])));
+            PrintWriter writer = new PrintWriter(new File(args[4]+".after"));
             ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-            hideDelegate(m,args[0],args[1],args[2]).doPrettyPrint(writer,formatter);
+            hideDelegate(m,args[0],args[1],args[2],Integer.parseInt(args[3]))
+                    .doPrettyPrint(writer,formatter);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -57,9 +59,7 @@ public class Refactor {
     }
 
     // TODO: implement refactoring i.e. Model -> transformed Model
-    // 1. Traverse to class
-    // 2. Traverse to method in class
-    public static Model hideDelegate(Model m, String moduleName, String className, String methodName)
+    public static Model hideDelegate(Model m, String moduleName, String className, String methodName, int line)
             throws RefactoringException {
 
         ModuleDecl mDecl = m.lookupModule(moduleName);
@@ -77,8 +77,15 @@ public class Refactor {
             throw new RefactoringException(String.format("Method by name %s not found", methodName));
         }
 
-        List<Stmt> stmts =  mImpl.getBlock().getStmtList();
+        AssignStmt stmt1 = (AssignStmt) mImpl.getBlock().getStmt(line);
+        if(stmt1 == null || !(stmt1 instanceof AssignStmt) ) {
+            throw new RefactoringException(String.format("Line %i in method %s is not an assignment", line,methodName));
+        }
 
+        AssignStmt stmt2 = (AssignStmt) mImpl.getBlock().getStmt(line+1);
+        if(stmt2 == null || !(stmt2 instanceof AssignStmt) ) {
+            throw new RefactoringException(String.format("Line %i in method %s is not an assignment", line+1,methodName));
+        }
 
         return m;
 
