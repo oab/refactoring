@@ -77,18 +77,33 @@ public class Refactor {
             throw new RefactoringException(String.format("Method by name %s not found", methodName));
         }
 
-        AssignStmt stmt1 = (AssignStmt) mImpl.getBlock().getStmt(line);
-        if(stmt1 == null || !(stmt1 instanceof AssignStmt) ) {
-            throw new RefactoringException(String.format("Line %i in method %s is not an assignment", line,methodName));
+        Stmt stmt1 = mImpl.getBlock().getStmt(line);
+        Stmt stmt2 = mImpl.getBlock().getStmt(line+1);
+
+        if(stmt1 == null) {
+            throw new RefactoringException(String.format("No line %i in method %s", line, methodName));
         }
 
-        AssignStmt stmt2 = (AssignStmt) mImpl.getBlock().getStmt(line+1);
-        if(stmt2 == null || !(stmt2 instanceof AssignStmt) ) {
-            throw new RefactoringException(String.format("Line %i in method %s is not an assignment", line+1,methodName));
+        if(stmt2 == null) {
+            throw new RefactoringException(String.format("No line %i in method %s", line+1, methodName));
         }
+
+        // Use https://openjdk.java.net/jeps/305 ? or make 1.8 compatible
+        if(stmt1 instanceof AssignStmt) {
+
+            if (stmt2 instanceof AssignStmt) {
+              // further checking
+
+            } else {
+                throw new RefactoringException(String.format("Line %d in method %s is not an assignment", line + 1, methodName));
+            }
+        } else {
+            throw new RefactoringException(String.format("Line %d in method %s is not an assignment", line,methodName));
+        }
+
+
 
         return m;
-
 
     }
 
