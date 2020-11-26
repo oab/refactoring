@@ -7,6 +7,19 @@ application {
     mainClassName = 'refactoring.Main'
 }
 
+compileJava {
+    options.compilerArgs += ['--enable-preview']
+    options.release = 14
+}
+tasks.withType(JavaExec) {
+    jvmArgs += '--enable-preview'
+}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(14)
+    }
+}
+
 // Make a fat Jar
 jar {
     manifest {
