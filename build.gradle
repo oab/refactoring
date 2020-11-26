@@ -47,17 +47,3 @@ dependencies {
     //annotationProcessor 'info.picocli:picocli-codegen:4.5.2'
     implementation files('libs/absfrontend.jar')
 }
-
-// Needed for the preview features like pattern matching instanceof
-tasks.withType(JavaCompile) {
-    options.compilerArgs += "--enable-preview"
-}
-
-tasks.withType(Test) {
-    jvmArgs += "--enable-preview"
-}
-
-tasks.withType(JavaExec) {
-    jvmArgs += '--enable-preview'
-}
-
