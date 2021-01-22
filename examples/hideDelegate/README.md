@@ -34,4 +34,15 @@ We expect the following: A `Client` object calls `Person` object in cog X and th
 `Person` object becomes the active object in cog X. The active `Person` object which 
 may not reside in cog X calls the `Department` object which resides in cog X,
 same as `Client`, and can only become active when `Client` completes its call;
-we should have a deadlock.  
+we should have a deadlock.
+
+If we adopt the notation (similar to the formal one) of 
+```
+cog X = {active_obj[what it is doing]|suspended_obj1,suspended_obj2,...}`  
+```
+we can describe the deadlock situation as
+
+```
+cog X = {Client[waiting for call to Person to return]|Department}
+Cog Y = {Person[waiting for call to Department to return]|...}
+```
