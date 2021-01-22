@@ -30,8 +30,8 @@ read this as "a Client object calls a Person object which calls a Department obj
 Here `Department` reside in the same cog as `Client` when the call in `Client`
 is done through `enquire(False)`. 
 
-We expect the following: A `Client` object calls `Person` in cog X and
-`Person` becomes the active object in cog X. The active `Person` object which 
+We expect the following: A `Client` object calls `Person` object in cog X and the
+`Person` object becomes the active object in cog X. The active `Person` object which 
 may not reside in cog X calls the `Department` object which resides in cog X,
-same as `Client` and can only become active when `Client` completes its call;
+same as `Client`, and can only become active when `Client` completes its call;
 we should have a deadlock.  
