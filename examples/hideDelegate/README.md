@@ -30,11 +30,11 @@ read this as "a Client object calls a Person object which calls a Department obj
 Here `Department` reside in the same cog as `Client` when the call in `Client`
 is done through `enquire(False)`. 
 
-We expect the following can occur: A `Client` object in cog X calls `Person` object in 
+We expect the following can occur: A `Client` object in cog X calls a `Person` object in 
 cog Y and the `Person` object becomes the active object in cog Y. The active object `Person` 
-in cog Y  calls the `Department` object which resides in cog X,
-same as `Client` the client object, and which can only become active when the `Client` object 
-completes its call to  the `Person` object in cog Y; we should have a deadlock.
+in cog Y calls the `Department` object which resides in cog X and which can only become 
+active in cog X when the `Client` object in cog X completes its call to  the `Person` object 
+in cog Y; we have a deadlock.
 
 If we adopt the notation (similar to the formal one) of 
 ```
