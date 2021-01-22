@@ -30,19 +30,19 @@ read this as "a Client object calls a Person object which calls a Department obj
 Here `Department` reside in the same cog as `Client` when the call in `Client`
 is done through `enquire(False)`. 
 
-We expect the following: A `Client` object calls `Person` object in cog X and the
-`Person` object becomes the active object in cog X. The active `Person` object which 
-may not reside in cog X calls the `Department` object which resides in cog X,
-same as `Client`, and can only become active when `Client` completes its call;
-we should have a deadlock.
+We expect the following can occur: A `Client` object in cog X calls `Person` object in 
+cog Y and the `Person` object becomes the active object in cog Y. The active object `Person` 
+in cog Y  calls the `Department` object which resides in cog X,
+same as `Client` the client object, and which can only become active when the `Client` object 
+completes its call to  the `Person` object in cog Y; we should have a deadlock.
 
 If we adopt the notation (similar to the formal one) of 
 ```
-cog X = {active_obj[what it is doing]|suspended_obj1,suspended_obj2,...}`  
+cog Name = {active_obj[what it is doing]|suspended_obj1,suspended_obj2,...}`  
 ```
 we can describe the deadlock situation as
 
 ```
 cog X = {Client[waiting for call to Person to return]|Department}
-Cog Y = {Person[waiting for call to Department to return]|...}
+cog Y = {Person[waiting for call to Department to return]|...}
 ```
