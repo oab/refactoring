@@ -86,6 +86,7 @@ public class Refactor {
         Iterator<Stmt> stmts = mImpl.getBlock().getStmts().iterator();
 
         // Match 1.
+        /* Java 14
         while (stmts.hasNext()) {
             if(stmts.next() instanceof AssignStmt astmt1 &&
                astmt1.getVar().getName().equals(assignVar) &&
@@ -100,9 +101,56 @@ public class Refactor {
                 return m;
             }
         }
+        */
 
-        // For better error the conjunction above needs to be inspected
-        throw new RefactoringException(String.format("Name mismatch"));
+        Stmt match1;
+        Stmt match2;
+        Match: {
+            while (stmts.hasNext()) {
+                match1 = stmts.next();
+
+                if (!(match1 instanceof AssignStmt)) continue;
+                AssignStmt astmt1 = (AssignStmt) match1;
+
+                if (!astmt1.getVar().getName().equals(assignVar)) continue;
+
+                if(!(astmt1.getValue() instanceof SyncCall)) continue;
+                SyncCall syncallstmt1 = (SyncCall) astmt1.getValue();
+
+                if(!(syncallstmt1.getMethod().equals(methodCall))) continue;
+
+                if(!(syncallstmt1.getCalleeNoTransform() instanceof VarUse)) continue;
+                VarUse v1 = (VarUse) syncallstmt1.getCalleeNoTransform();
+
+                if(!(v1.getName().equals(targetVar))) continue;
+
+                match2 = stmts.next();
+                if(!(match2 instanceof AssignStmt)) continue;
+                AssignStmt astmt2 = (AssignStmt) match2;
+
+                if(!(astmt2.getValue() instanceof SyncCall)) continue;
+                SyncCall syncallstmt2 = (SyncCall) astmt2.getValue();
+
+                if(!(syncallstmt2.getCalleeNoTransform() instanceof VarUse)) continue;
+                VarUse v2 =  (VarUse) syncallstmt2.getCalleeNoTransform();
+
+                if(!v2.getName().equals(assignVar)) continue;
+
+                break Match;
+
+            }
+
+            // Not found
+            throw new RefactoringException(String.format("No match found"));
+        }
+
+        PrintWriter writer = new PrintWriter(System.out);
+        ABSFormatter formatter = new DefaultABSFormatter(writer);
+        match1.doPrettyPrint(writer,formatter);
+        match2.doPrettyPrint(writer,formatter);
+
+        return m;
+
 
 
     }

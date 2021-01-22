@@ -4,16 +4,28 @@ plugins {
 }
 
 application {
-    mainClassName = 'refactoring.Main'
+    mainClass = 'refactoring.Refactor'
 }
 
 compileJava {
-    options.compilerArgs += ['--enable-preview']
-    options.release = 14
+    // reverting to java 8
+    //options.compilerArgs += ['--enable-preview']
+    options.release = 8
 }
+
+test {
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: " + descriptor)
+    }
+    onOutput { descriptor, event ->
+        logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+    }
+}
+
 tasks.withType(JavaExec) {
     jvmArgs += '--enable-preview'
 }
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(14)
@@ -23,7 +35,7 @@ java {
 // Make a fat Jar
 jar {
     manifest {
-        attributes 'Main-Class': 'refactoring.Main',
+        attributes 'Main-Class': 'refactoring.Refactor',
                    'Class-Path': 'absfrontend.jar'
     }
     from {
