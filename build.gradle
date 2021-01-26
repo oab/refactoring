@@ -1,10 +1,15 @@
+import org.gradle.api.provider.Property
+
 plugins {
     id 'java'
-    id 'application'
+    id 'java-library'
 }
+project.version = '0.1.0'
 
-application {
-    mainClass = 'refactoring.Refactor'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(15)
+    }
 }
 
 compileJava {
@@ -14,37 +19,20 @@ compileJava {
 }
 
 test {
-    beforeTest { descriptor ->
-        logger.lifecycle("Running test: " + descriptor)
-    }
-    onOutput { descriptor, event ->
-        logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
-    }
+    testLogging.showStandardStreams = true
 }
 
-tasks.withType(JavaExec) {
-    jvmArgs += '--enable-preview'
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(14)
-    }
-}
-
-// Make a fat Jar
 jar {
     manifest {
-        attributes 'Main-Class': 'refactoring.Refactor',
-                   'Class-Path': 'absfrontend.jar'
-    }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+        attributes 'Class-Path' : 'absfrontend.jar'
     }
 }
+
+
 
 // For now this should work, but the build should depend on
 // the source of the git repo; fetch, build and use.
+
 
 repositories {
     flatDir {

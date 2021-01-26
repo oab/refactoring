@@ -55,11 +55,15 @@ public class HideDelegateTests {
 	@Test
 	public void test2() throws Exception {
 		Main entry = new Main();
-		Model m = entry.parse(Collections.singletonList(new File(sample)));
+		Model in = entry.parse(Collections.singletonList(new File(sample)));
+		assert (in!=null);
 		PrintWriter writer = new PrintWriter(new File(sample+".after"));
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		hideDelegate(m,modName,className,metName,aVar,tVar,mCall)
-				.doPrettyPrint(writer,formatter);
+		Model out = hideDelegate(in,modName,className,metName,aVar,tVar,mCall);
+		out.doPrettyPrint(writer,formatter);
+
+
+		assert (out!=null);
 	}
 }
