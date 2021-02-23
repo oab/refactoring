@@ -12,9 +12,11 @@ import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.*;
 import org.abs_models.frontend.typechecker.KindedName;
 import org.abs_models.frontend.typechecker.KindedName.Kind;
+import refactoring.HideDelegate;
+import refactoring.Refactor;
 
 
-import static refactoring.Refactor.*;
+import static refactoring.HideDelegate.*;
 
 public class HideDelegateTests {
 
@@ -24,46 +26,63 @@ public class HideDelegateTests {
 	 * 2. m = d.getManager();
      */
 
-	String sample = "examples/hideDelegate/before.abs";
-	String modName = "HideDelegate";
-	String className = "Client";
-	String metName = "enquire";
-	String aVar = "d";
-	String tVar = "p";
-	String mCall = "getDept";
+	String plain = "examples/hideDelegate/plain.abs";
+	String block = "examples/hideDelegate/block.abs";
+	String inModule = "HideDelegate";
+	String inClass = "Client";
+	String inMethod = "enquire";
+	String assignmentVar = "d";
+	String targetVar = "p";
+	String middleMethod = "getDept";
+	String endMethod = "getManager";
+	Refactor r = new HideDelegate(inModule,inClass,inMethod,assignmentVar,targetVar,middleMethod,endMethod);
 
 
 	@Test
-	public void test1() throws Exception {
+	public void astTest() throws Exception {
 		Main entry = new Main();
-		Model m = entry.parse(Collections.singletonList(new File(sample)));
+		Model m = entry.parse(Collections.singletonList(new File(plain)));
 		assert (m!=null);
-		ModuleDecl mod = m.lookupModule(modName);
+		ModuleDecl mod = m.lookupModule(inModule);
 		assert (mod!=null);
-		ClassDecl c = (ClassDecl)mod.lookup(new KindedName(Kind.CLASS,className));
+		ClassDecl c = (ClassDecl)mod.lookup(new KindedName(Kind.CLASS,inClass));
 		assert (c!=null);
-		MethodImpl md = c.lookupMethod(metName);
+		MethodImpl md = c.lookupMethod(inMethod);
 		assert (md!=null);
 		int n = 5;
 		Stmt s1 = md.getBlock().getStmt(n);
 		assertThat(s1, instanceOf(AssignStmt.class));
 		Stmt s2 = md.getBlock().getStmt(n+1);
 		assertThat(s2, instanceOf(AssignStmt.class));
-		return;
 	}
 
 	@Test
-	public void test2() throws Exception {
+	public void hideDelegatePlainTest() throws Exception {
 		Main entry = new Main();
-		Model in = entry.parse(Collections.singletonList(new File(sample)));
+		Model in = entry.parse(Collections.singletonList(new File(plain)));
 		assert (in!=null);
-		PrintWriter writer = new PrintWriter(new File(sample+".after"));
+		PrintWriter writer = new PrintWriter(plain+".after");
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		Model out = hideDelegate(in,modName,className,metName,aVar,tVar,mCall);
+		Model out = r.refactor(in);
+		assert (out!=null);
+
 		out.doPrettyPrint(writer,formatter);
 
+	}
 
+	@Test
+	public void hideDelegateBlockTest() throws Exception {
+		Main entry = new Main();
+		Model in = entry.parse(Collections.singletonList(new File(block)));
+		assert (in!=null);
+		PrintWriter writer = new PrintWriter(block+".after");
+		ABSFormatter formatter = new DefaultABSFormatter(writer);
+
+		Model out = r.refactor(in);
 		assert (out!=null);
+
+		out.doPrettyPrint(writer,formatter);
+
 	}
 }

@@ -17,8 +17,8 @@ class Person(DeptI d) implements PersonI {
 
     // BEFORE: unused.
     PersonI getManager() {
-	PersonI p=d.getManager();
-	return p;
+	  PersonI p=d.getManager();
+	  return p;
   }
 
   DeptI getDept() {
@@ -29,28 +29,28 @@ class Person(DeptI d) implements PersonI {
 class Dept implements DeptI {
     PersonI m;
     PersonI getManager() {
-	return m;
+	  return m;
     }
     Unit setManager(PersonI p) {
-	m = p;
+	  m = p;
     }
 }
 
 class Client implements ClientI {
     Unit enquire(Bool remote){
-	DeptI d;
-	if (remote) {
-	    d = new Dept();
-	} else {
-	    d = new local Dept();
-	}
-	PersonI m = new Person(d);
-	PersonI p = new Person(d);
-	d.setManager(m);
+	  DeptI d;
+	  if (remote) {
+	      d = new Dept();
+	  } else {
+	      d = new local Dept();
+	  }
+	  PersonI m = new Person(d);
+	  PersonI p = new Person(d);
+	  d.setManager(m);
 
-	/* Client -> Person; Client -> Department */
-	d = p.getDept();
-	m = d.getManager();
+	  /* Client -> Person; Client -> Department */
+	  d = p.getDept();
+	  m = d.getManager();
     }
 }
 

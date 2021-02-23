@@ -1,4 +1,4 @@
-Note in `before.abs` that we have
+Note in `plain.abs` that we have
 
 ```
 interface ClientI {
