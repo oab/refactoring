@@ -54,6 +54,8 @@ public class HideDelegate extends Refactor {
         // remove 1. and 2. and replace with 3.
         // 3. m = p.getManager();
 
+
+
         // Construct the replacement node
         SyncCall call = new SyncCall()
                 .setMethod(endMethod)
