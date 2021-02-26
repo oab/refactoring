@@ -46,3 +46,15 @@ we can describe the deadlock situation as
 cog X = {Client[waiting for call to Person to return]|Department}
 cog Y = {Person[waiting for call to Department to return]|...}
 ```
+
+=== `interleaved.abs`
+
+This example contains an unrelated call (here: `skip`) between both calls. While we may not directly
+**identify** this instance (it could be normalized), Volker thinks the API should definitely be able
+to handle this case gracefully.
+
+=== `def-used.abs`
+
+This example still needs the first argument, so the refactoring has to be careful about removing
+the declaration. Note that the target variable is named `t` here, not `d`.
+
