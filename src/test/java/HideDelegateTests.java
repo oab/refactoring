@@ -5,6 +5,8 @@ import java.util.Collections;
 import org.abs_models.backend.prettyprint.ABSFormatter;
 import org.abs_models.backend.prettyprint.DefaultABSFormatter;
 import org.junit.*;
+
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -31,11 +33,7 @@ public class HideDelegateTests {
 	String inModule = "HideDelegate";
 	String inClass = "Client";
 	String inMethod = "enquire";
-	String assignmentVar = "d";
-	String targetVar = "p";
-	String middleMethod = "getDept";
-	String endMethod = "getManager";
-	Refactor r = new HideDelegate(inModule,inClass,inMethod,assignmentVar,targetVar,middleMethod,endMethod);
+
 
 
 	@Test
@@ -54,6 +52,11 @@ public class HideDelegateTests {
 		assertThat(s1, instanceOf(AssignStmt.class));
 		Stmt s2 = md.getBlock().getStmt(n+1);
 		assertThat(s2, instanceOf(AssignStmt.class));
+		int s1absoluteLine = s1.getStartLine();
+		int s2absoluteLine = s2.getStartLine();
+		assertThat(s1absoluteLine,equalTo(52));
+		assertThat(s2absoluteLine,equalTo(53));
+
 	}
 
 	@Test
@@ -64,10 +67,11 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(plain+".after");
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		Model out = r.refactor(in);
-		assert (out!=null);
+		Refactor r = new HideDelegate(inModule,inClass,inMethod,52);
+		r.refactor(in);
 
-		out.doPrettyPrint(writer,formatter);
+
+		in.doPrettyPrint(writer,formatter);
 
 	}
 
@@ -79,10 +83,9 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(block+".after");
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		Model out = r.refactor(in);
-		assert (out!=null);
-
-		out.doPrettyPrint(writer,formatter);
+		Refactor r = new HideDelegate(inModule,inClass,inMethod,53);
+		r.refactor(in);
+		in.doPrettyPrint(writer,formatter);
 
 	}
 }
