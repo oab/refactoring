@@ -45,6 +45,7 @@ public class HideDelegate extends Refactor {
         // remove 1. and 2. and replace with 3.
         // 3. m = p.getManager();
 
+	// TODO: Split finding instances/first instance from actual refactoring?
         Match candidate = find(mImpl.getBlock().getStmtList());
 
         // We can refactor

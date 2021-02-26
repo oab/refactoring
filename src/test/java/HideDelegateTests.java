@@ -9,6 +9,7 @@ import org.junit.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
 
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.*;
@@ -28,13 +29,18 @@ public class HideDelegateTests {
 	 * 2. m = d.getManager();
      */
 
+	/* TODO: JUnit has a pattern for a set of input files,
+	     actually we want pairs of (filename, Match), since
+			 each file may have its own exact incantation of the
+			 refactoring.
+	*/
 	String plain = "examples/hideDelegate/plain.abs";
 	String block = "examples/hideDelegate/block.abs";
+	String interleaved = "examples/hideDelegate/interleaved.abs";
+	String defused = "examples/hideDelegate/def-used.abs";
 	String inModule = "HideDelegate";
 	String inClass = "Client";
 	String inMethod = "enquire";
-
-
 
 	@Test
 	public void astTest() throws Exception {
@@ -61,31 +67,59 @@ public class HideDelegateTests {
 
 	@Test
 	public void hideDelegatePlainTest() throws Exception {
+		String file = plain;
 		Main entry = new Main();
-		Model in = entry.parse(Collections.singletonList(new File(plain)));
+		Model in = entry.parse(Collections.singletonList(new File(file)));
 		assert (in!=null);
-		PrintWriter writer = new PrintWriter(plain+".after");
+		String outFile = file+".after";
+		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
 		Refactor r = new HideDelegate(inModule,inClass,inMethod,52);
 		r.refactor(in);
 
-
 		in.doPrettyPrint(writer,formatter);
 
+		Model out = entry.parse(Collections.singletonList(new File(outFile)));
+		/* TODO: There's a warning in the JavaDoc here, also maybe check the
+			       ABS unit-tests on what's the best way to check for correct output. */
+		assertFalse(out.hasErrors());
 	}
 
 	@Test
 	public void hideDelegateBlockTest() throws Exception {
+		String file = block;
 		Main entry = new Main();
-		Model in = entry.parse(Collections.singletonList(new File(block)));
+		Model in = entry.parse(Collections.singletonList(new File(file)));
 		assert (in!=null);
-		PrintWriter writer = new PrintWriter(block+".after");
+		String outFile = file+".after";
+		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
 		Refactor r = new HideDelegate(inModule,inClass,inMethod,53);
 		r.refactor(in);
 		in.doPrettyPrint(writer,formatter);
+		Model out = entry.parse(Collections.singletonList(new File(outFile)));
+		assertFalse(out.hasErrors());
+	}
 
+	@Test
+	public void interleavedTest() throws Exception {
+		String file = interleaved;
+		Main entry = new Main();
+		Model in = entry.parse(Collections.singletonList(new File(file)));
+		assert (in!=null);
+		String outFile = file+".after";
+		PrintWriter writer = new PrintWriter(outFile);
+		ABSFormatter formatter = new DefaultABSFormatter(writer);
+
+		/* TODO: I think it's okay of there's a hacky way to create Match
+		         from the sample just for this test here (or via line numbers, or ...)
+    
+		Match m = Pattern1Match(...);
+		Refactor r = new HideDelegate(m);
+		r.refactor(in);
+		in.doPrettyPrint(writer,formatter);
+		*/
 	}
 }
