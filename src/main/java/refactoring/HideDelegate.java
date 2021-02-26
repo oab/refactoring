@@ -104,7 +104,7 @@ public class HideDelegate extends Refactor {
         return new NoMatch("No line matched");
     }
 
-    private static abstract class Match {}
+    public static abstract class Match {}
     private static class NoMatch extends Match {
         String error = "";
         private NoMatch(){}
@@ -143,6 +143,64 @@ public class HideDelegate extends Refactor {
             this.endMethod = endMethod;
 
         }
+    }
+
+    public static class PatternInstanceMatch extends Match {
+        AssignStmt match;
+        Stmt next;
+        String assignVar1; // redundant b/c match
+        String assignVar2; // may be null!
+        SyncCall syncallstmt1;
+        Call syncallstmt2;
+
+        public PatternInstanceMatch(Model m, String inModule, String inClass, String inMethod,
+                              int line1, int line2) throws RefactoringException {
+
+            ModuleDecl mDecl = m.lookupModule(inModule);
+            if (mDecl == null) {
+                throw new RefactoringException(String.format("Module by name %s not found", inModule));
+            }
+
+            ClassDecl cDecl = (ClassDecl)mDecl.lookup(new KindedName(KindedName.Kind.CLASS, inClass));
+            if(cDecl == null) {
+                throw new RefactoringException(String.format("Class by name %s not found", inClass));
+            }
+
+            MethodImpl mImpl = cDecl.lookupMethod(inMethod);
+            if(mImpl == null) {
+                throw new RefactoringException(String.format("Method by name %s not found", inMethod));
+            }
+            Stmt s1 = getStmtAtLine(mImpl.getBlock(), line1);
+            next = getStmtAtLine(mImpl.getBlock(), line2);
+            try {
+              match = (AssignStmt)s1;
+              syncallstmt1 = (SyncCall) match.getValue();
+              syncallstmt2 = null;
+              if (next instanceof AssignStmt) {
+                syncallstmt2 = (Call) ((AssignStmt) next).getValue();
+              } else if (next instanceof ExpressionStmt) {
+                syncallstmt2 = ((ExpressionStmt) next).getCallExpression();
+              } else {
+                assert(false);
+              }
+              assignVar1 = match.getVar().getName();
+              assert assignVar1.equals(((VarOrFieldUse) ((SyncCall) syncallstmt2).getCallee()).getName());
+            } catch (Exception e) {
+              throw new RefactoringException(e.toString());
+            }
+        }
+    }
+
+    private static Stmt getStmtAtLine(Block b, int line) {
+      Iterator<Stmt> body = b.getStmtList().iterator();
+      Stmt s = null;
+      while (body.hasNext()) {
+        s = body.next();
+        if (s.getStartLine() == line) {
+          break;
+        }
+      }
+      return s;
     }
 
     private static Match tryPattern1Match(Stmt match, Stmt next,List<Stmt> block) {

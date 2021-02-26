@@ -1,3 +1,5 @@
+package refactoring;
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Collections;
@@ -16,8 +18,8 @@ import org.abs_models.frontend.parser.*;
 import org.abs_models.frontend.typechecker.KindedName;
 import org.abs_models.frontend.typechecker.KindedName.Kind;
 import refactoring.HideDelegate;
+import refactoring.HideDelegate.*;
 import refactoring.Refactor;
-
 
 import static refactoring.HideDelegate.*;
 
@@ -113,10 +115,15 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
+		/* TODO: Still redundant. For a unit-test, probably just the line numbers
+							are input enough, and the constructor only matches the structure.
+							If you want to be safe, you'd afterwards match names. */
+		PatternInstanceMatch m = new PatternInstanceMatch(in, inModule, inClass,inMethod, 52,54);
+		assertEquals("d",m.assignVar1);
+		assertEquals("d",((VarOrFieldUse) ((SyncCall) m.syncallstmt2).getCallee()).getName());
 		/* TODO: I think it's okay of there's a hacky way to create Match
 		         from the sample just for this test here (or via line numbers, or ...)
-    
-		Match m = Pattern1Match(...);
+
 		Refactor r = new HideDelegate(m);
 		r.refactor(in);
 		in.doPrettyPrint(writer,formatter);
