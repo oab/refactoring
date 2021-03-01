@@ -17,11 +17,6 @@ import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.*;
 import org.abs_models.frontend.typechecker.KindedName;
 import org.abs_models.frontend.typechecker.KindedName.Kind;
-import refactoring.HideDelegate;
-import refactoring.HideDelegate.*;
-import refactoring.Refactor;
-
-import static refactoring.HideDelegate.*;
 
 public class HideDelegateTests {
 
@@ -40,6 +35,7 @@ public class HideDelegateTests {
 	String block = "examples/hideDelegate/block.abs";
 	String interleaved = "examples/hideDelegate/interleaved.abs";
 	String defused = "examples/hideDelegate/def-used.abs";
+	String makemethod = "examples/hideDelegate/makemethod.abs";
 	String inModule = "HideDelegate";
 	String inClass = "Client";
 	String inMethod = "enquire";
@@ -73,12 +69,20 @@ public class HideDelegateTests {
 		Main entry = new Main();
 		Model in = entry.parse(Collections.singletonList(new File(file)));
 		assert (in!=null);
-		String outFile = file+".after";
+		String outFile = file.replaceFirst(".abs","-after.abs");
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		Refactor r = new HideDelegate(inModule,inClass,inMethod,52);
-		r.refactor(in);
+		HideDelegate r = new HideDelegate(in);
+		try {
+			Refactoring.Match m = r.getMatch(inModule,inClass,inMethod,52,53);
+			assert(m != null);
+			r.refactor(m);
+
+		} catch (MatchException e) {
+			System.out.println(e.getMessage());
+
+		}
 
 		in.doPrettyPrint(writer,formatter);
 
@@ -94,12 +98,21 @@ public class HideDelegateTests {
 		Main entry = new Main();
 		Model in = entry.parse(Collections.singletonList(new File(file)));
 		assert (in!=null);
-		String outFile = file+".after";
+		String outFile = file.replaceFirst(".abs","-after.abs");
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		Refactor r = new HideDelegate(inModule,inClass,inMethod,53);
-		r.refactor(in);
+		HideDelegate r = new HideDelegate(in);
+		try {
+			Refactoring.Match m = r.getMatch(inModule,inClass,inMethod,53,54);
+			assert(m != null);
+			r.refactor(m);
+
+		} catch (MatchException e) {
+			System.out.println(e.getMessage());
+
+		}
+
 		in.doPrettyPrint(writer,formatter);
 		Model out = entry.parse(Collections.singletonList(new File(outFile)));
 		assertFalse(out.hasErrors());
@@ -111,22 +124,37 @@ public class HideDelegateTests {
 		Main entry = new Main();
 		Model in = entry.parse(Collections.singletonList(new File(file)));
 		assert (in!=null);
-		String outFile = file+".after";
+		String outFile = file.replaceFirst(".abs","-after.abs");
+
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
 		/* TODO: Still redundant. For a unit-test, probably just the line numbers
 							are input enough, and the constructor only matches the structure.
 							If you want to be safe, you'd afterwards match names. */
-		PatternInstanceMatch m = new PatternInstanceMatch(in, inModule, inClass,inMethod, 52,54);
-		assertEquals("d",m.assignVar1);
-		assertEquals("d",((VarOrFieldUse) ((SyncCall) m.syncallstmt2).getCallee()).getName());
-		/* TODO: I think it's okay of there's a hacky way to create Match
-		         from the sample just for this test here (or via line numbers, or ...)
 
-		Refactor r = new HideDelegate(m);
-		r.refactor(in);
+		HideDelegate r = new HideDelegate(in);
+		try {
+			Refactoring.Match m = r.getMatch(inModule,inClass,inMethod,52,54);
+			assert(m != null);
+			r.refactor(m);
+
+		} catch (MatchException e) {
+			System.out.println(e.getMessage());
+
+		}
+
+	    //assertEquals("d",m.assignVar1);
+		//assertEquals("d",((VarOrFieldUse) ((SyncCall) m.syncallstmt2).getCallee()).getName());
+		/* TODO: I think it's okay of there's a hacky way to create Match
+		         from the sample just for this test here (or via line numbers, or ...) */
+
 		in.doPrettyPrint(writer,formatter);
-		*/
+		Model out = entry.parse(Collections.singletonList(new File(outFile)));
+		assertFalse(out.hasErrors());
+
 	}
+
+
+
 }

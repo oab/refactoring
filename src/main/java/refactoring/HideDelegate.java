@@ -1,261 +1,165 @@
 package refactoring;
 
-// this might be interesting
-// import org.abs_models.frontend.parser.SourcePosition;
-
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.KindedName;
-import java.util.Iterator;
 
-public class HideDelegate extends Refactor {
+// TODO: Split finding instances/first instance from actual refactoring?
 
-    private final String inModule;
-    private final String inClass;
-    private final String inMethod;
-    private final int line;
+// Matching against e.g
+// 1. d = p.getDept();
+// 2. m = d.getManager();
+// Assume p also implements getManager (TODO assume -> ensure)
+// remove 1. and 2. and replace with 3.
+// 3. m = p.getManager();
 
-    public HideDelegate(String inModule, String inClass, String inMethod, int line) {
-        this.inModule = inModule;
-        this.inClass = inClass;
-        this.inMethod = inMethod;
-        this.line = line;
+public class HideDelegate extends Refactoring {
+
+    public HideDelegate(Model m) {
+        super(m);
     }
 
-    public void refactor(Model m) throws RefactoringException {
-
-        ModuleDecl mDecl = m.lookupModule(inModule);
-        if (mDecl == null) {
-            throw new RefactoringException(String.format("Module by name %s not found", inModule));
-        }
-
-        ClassDecl cDecl = (ClassDecl)mDecl.lookup(new KindedName(KindedName.Kind.CLASS, inClass));
-        if(cDecl == null) {
-            throw new RefactoringException(String.format("Class by name %s not found", inClass));
-        }
-
-        MethodImpl mImpl = cDecl.lookupMethod(inMethod);
-        if(mImpl == null) {
-            throw new RefactoringException(String.format("Method by name %s not found", inMethod));
-        }
-
-        // Matching against e.g
-        // 1. d = p.getDept();
-        // 2. m = d.getManager();
-        // Assume p also implements getManager (TODO assume -> ensure)
-        // remove 1. and 2. and replace with 3.
-        // 3. m = p.getManager();
-
-	// TODO: Split finding instances/first instance from actual refactoring?
-        Match candidate = find(mImpl.getBlock().getStmtList());
-
-        // We can refactor
-        if (candidate instanceof Pattern1Match) {
-            Pattern1Match pattern1 = (Pattern1Match) candidate;
-
-            // Construct the replacement node
-            SyncCall call = new SyncCall()
-                    .setMethod(pattern1.endMethod)
-                    .setCallee(new VarUse().setName(pattern1.callVar1));
-
-            AssignStmt replacement = new AssignStmt()
-                    .setVar(new VarUse().setName(pattern1.assignVar2))
-                    .setValue(call);
-
-            pattern1.match.replaceWith(replacement);
-            pattern1.block.removeChild(pattern1.block.getIndexOfChild(pattern1.next));
-
-        }
-        // We could not refactor
-        else {
-          String message = "";
-          if(candidate instanceof NoMatch) {
-              NoMatch nomatch = (NoMatch) candidate;
-              message = nomatch.error;
-
-          }
-          throw new RefactoringException(message);
-        }
-
+    public Match getMatch(String inModule, String inClass, String inMethod,
+                          int line1, int line2) throws MatchException {
+        return new HideDelegateMatch(inModule,inClass,inMethod,line1,line2);
     }
 
-    private  Match find(List<Stmt> stmtlist) {
-        Iterator<Stmt> stmts = stmtlist.iterator();
+   // A match here is when bracketed parts are equal
+   // [assignVar1] = callVar1.m1
+   // assignVar2 = [callVar2].m2
 
-        //find the line match should be at
-        while(stmts.hasNext()) {
-            Stmt match = stmts.next();
-            int atLine = match.getStartLine();
+    static String pathError    = "%s by name %s not found";
+    static String lineNotFound = "No statement at line %d";
+    static String noAssigmStmt = "Statement at line %d is not an assignment statement";
+    static String noCall       = "Righthand side of assignmnt statement at line %d is not a call";
+    static String varMissmatch = "Variable %s used in assignment at line %d " +
+                                 "not the same as the variable %s used in call at line %d";
+    static String expectingVar = "expecting variable use, not field use at line %d";
 
-            if(atLine < line) {
-                if (match instanceof Block) {
-                    Block b = (Block) match;
-                    Match descend = find(b.getStmtList());
-                    if (!(descend instanceof NoMatch)) {
-                        return descend;
-                    }
-                }
-            } else if(atLine == line) {
-                if(stmts.hasNext()) {
-                    Stmt next = stmts.next();
-                    return tryPattern1Match(match,next,stmtlist);
-                }
-            } else break;
-        }
-        return new NoMatch("No line matched");
-    }
+    private class HideDelegateMatch extends Match {
+        private VarUse line1AssignVar;
+        private VarUse line2AssignVar;
+        private VarUse line1CallVar;
+        private VarUse line2CallVar;
+        private SyncCall line1SyncCall;
+        private SyncCall line2SyncCall;
+        private AssignStmt line2AssignStmt;
+        private List<Stmt> line2InStmts;
+        //private InterfaceDecl usingI;
+        //private ClassDecl usingC;
 
-    public static abstract class Match {}
-    private static class NoMatch extends Match {
-        String error = "";
-        private NoMatch(){}
-        private NoMatch(String error){
-            this.error = error;
-        }
-    }
-
-    // Terminology used here:
-    // assignVar1 = callVar1.middleMethod();
-    // assignVar2 = callVar2.endMethod();
-    //
-    // The refactoring (at this spot only) is
-    // assignVar2 = callvar1.endMethod();
-    private static class Pattern1Match extends Match {
-        AssignStmt match;
-        AssignStmt next;
-        List<Stmt> block;
-        String assignVar1;
-        String assignVar2;
-        String callVar1;
-        String callVar2;
-        String middleMethod;
-        String endMethod;
-        private Pattern1Match(AssignStmt match, AssignStmt next,List<Stmt> block,
-                              String assignVar1, String assignVar2, String callVar1,
-                              String callVar2, String middleMethod, String endMethod) {
-            this.match = match;
-            this.next = next;
-            this.block = block;
-            this.assignVar1 = assignVar1;
-            this.assignVar2 = assignVar2;
-            this.callVar1 = callVar1;
-            this.callVar2 = callVar2;
-            this.middleMethod = middleMethod;
-            this.endMethod = endMethod;
-
-        }
-    }
-
-    public static class PatternInstanceMatch extends Match {
-        AssignStmt match;
-        Stmt next;
-        String assignVar1; // redundant b/c match
-        String assignVar2; // may be null!
-        SyncCall syncallstmt1;
-        Call syncallstmt2;
-
-        public PatternInstanceMatch(Model m, String inModule, String inClass, String inMethod,
-                              int line1, int line2) throws RefactoringException {
-
-            ModuleDecl mDecl = m.lookupModule(inModule);
+        public HideDelegateMatch(String inModule, String inClass, String inMethod,
+                                 int line1, int line2) throws MatchException {
+            ModuleDecl mDecl = model.lookupModule(inModule);
             if (mDecl == null) {
-                throw new RefactoringException(String.format("Module by name %s not found", inModule));
+                throw new MatchException(String.format(pathError, "Module", inModule));
             }
 
             ClassDecl cDecl = (ClassDecl)mDecl.lookup(new KindedName(KindedName.Kind.CLASS, inClass));
             if(cDecl == null) {
-                throw new RefactoringException(String.format("Class by name %s not found", inClass));
+                throw new MatchException(String.format(pathError, "Class", inClass));
             }
 
             MethodImpl mImpl = cDecl.lookupMethod(inMethod);
             if(mImpl == null) {
-                throw new RefactoringException(String.format("Method by name %s not found", inMethod));
+                throw new MatchException(String.format(pathError, "Method", inMethod));
             }
-            Stmt s1 = getStmtAtLine(mImpl.getBlock(), line1);
-            next = getStmtAtLine(mImpl.getBlock(), line2);
-            try {
-              match = (AssignStmt)s1;
-              syncallstmt1 = (SyncCall) match.getValue();
-              syncallstmt2 = null;
-              if (next instanceof AssignStmt) {
-                syncallstmt2 = (Call) ((AssignStmt) next).getValue();
-              } else if (next instanceof ExpressionStmt) {
-                syncallstmt2 = ((ExpressionStmt) next).getCallExpression();
-              } else {
-                assert(false);
-              }
-              assignVar1 = match.getVar().getName();
-              assert assignVar1.equals(((VarOrFieldUse) ((SyncCall) syncallstmt2).getCallee()).getName());
-            } catch (Exception e) {
-              throw new RefactoringException(e.toString());
+
+            List<Stmt> mstmts = mImpl.getBlockNoTransform().getStmtList();
+
+            Stmt s1 = getStmtAtLine(mstmts,line1);
+            if(s1 == null) throw new MatchException(String.format(lineNotFound,line1));
+            Stmt s2 = getStmtAtLine(mstmts,line2);
+            if(s2 == null) throw new MatchException(String.format(lineNotFound,line2));
+
+            if(!(s1 instanceof AssignStmt))
+                throw new MatchException(String.format(noAssigmStmt,line1));
+            AssignStmt line1AssignStmt = (AssignStmt) s1;
+
+            if(!(s2 instanceof AssignStmt))
+                throw new MatchException(String.format(noAssigmStmt,line2));
+            line2AssignStmt = (AssignStmt) s2;
+
+            Exp line1AssignValue = line1AssignStmt.getValue();
+            if(!(line1AssignValue instanceof SyncCall))
+                throw new MatchException(String.format(noCall,line1));
+            line1SyncCall = (SyncCall) line1AssignValue;
+
+            Exp line2AssignValue = line2AssignStmt.getValue();
+            if(!(line2AssignValue instanceof SyncCall))
+                throw new MatchException(String.format(noCall,line2));
+            line2SyncCall = (SyncCall) line2AssignValue;
+
+            VarOrFieldUse line1AssignVarOrField =  line1AssignStmt.getVar();
+            if(!(line1AssignVarOrField instanceof VarUse))
+                throw new MatchException(String.format(expectingVar,line1));
+            line1AssignVar = (VarUse) line1AssignVarOrField;
+
+            VarOrFieldUse line2AssignVarOrField =  line2AssignStmt.getVar();
+            if(!(line2AssignVarOrField instanceof VarUse))
+                throw new MatchException(String.format(expectingVar,line2));
+            line2AssignVar = (VarUse) line2AssignVarOrField;
+
+            PureExp line1SyncallExp =  line1SyncCall.getCallee();
+            if(!(line1SyncallExp instanceof VarUse))
+                throw new MatchException(String.format(expectingVar,line2));
+            line1CallVar = (VarUse) line1SyncallExp;
+
+            PureExp line2SyncallExp =  line2SyncCall.getCallee();
+            if(!(line2SyncallExp instanceof VarUse))
+                throw new MatchException(String.format(expectingVar,line2));
+            line2CallVar = (VarUse) line2SyncallExp;
+
+            String var1 = line1AssignVar.getName();
+            String var2 = line2CallVar.getName();
+
+            if (!var1.equals(var2)) {
+                throw new MatchException(String.format(varMissmatch, var1, line1, var2, line2));
             }
+        }
+
+        private Stmt getStmtAtLine(List<Stmt> stmts, int line) {
+            Stmt out = null;
+            for (Stmt s : stmts) {
+                if (s instanceof Block) {
+                    Block b = (Block) s;
+                    List<Stmt> nested = b.getStmtList();
+
+                    Stmt nestout = getStmtAtLine(nested, line);
+                    if (nestout != null) {
+                        out = nestout;
+                        line2InStmts = nested;
+                        break;
+                    }
+                }
+                if (s.getStartLine() == line) {
+                    out = s;
+                    line2InStmts = stmts;
+                    break;
+                }
+            }
+            return out;
+        }
+
+        public  void refactor() {
+            // Perform transformation
+            // Pre :
+            // assignVar1 = callVar1.call1(...)
+            // assignVar2 = callVar2.call2(...)
+            // Post:
+            // assignVar2 = callVar1.call2(...)
+            line1AssignVar.setName(line2AssignVar.getName());
+            line1SyncCall.setMethod(line2SyncCall.getMethod());
+            line2InStmts.removeChild(line2AssignStmt);
+
+            // Now we must ensure that
+            // 1. the interface of callVar1 implements call2
+            // 2. Any class implementing that interface implements call2
+
+
+
+
         }
     }
 
-    private static Stmt getStmtAtLine(Block b, int line) {
-      Iterator<Stmt> body = b.getStmtList().iterator();
-      Stmt s = null;
-      while (body.hasNext()) {
-        s = body.next();
-        if (s.getStartLine() == line) {
-          break;
-        }
-      }
-      return s;
-    }
-
-    private static Match tryPattern1Match(Stmt match, Stmt next,List<Stmt> block) {
-        AssignStmt tryMatch;
-        AssignStmt tryNext;
-        String tryAssignVar1;
-        String tryAssignVar2;
-        String tryCallVar1;
-        String tryCallVar2;
-        String tryMiddleMethod;
-        String tryEndMethod;
-
-        if (!(match instanceof AssignStmt))
-            return new NoMatch("No assignment at line");
-
-        tryMatch = (AssignStmt) match;
-
-        tryAssignVar1 = tryMatch.getVar().getName();
-
-        if (!(tryMatch.getValue() instanceof SyncCall))
-            return new NoMatch("No method call at line");
-
-        SyncCall syncallstmt1 = (SyncCall) tryMatch.getValue();
-
-        tryMiddleMethod = syncallstmt1.getMethod();
-
-        if (!(syncallstmt1.getCalleeNoTransform() instanceof VarUse))
-            return new NoMatch("No method call on variable at line");
-
-        tryCallVar1 = ((VarUse) syncallstmt1.getCalleeNoTransform()).getName();
-
-        if (!(next instanceof AssignStmt))
-            return new NoMatch();
-
-        tryNext = (AssignStmt) next;
-        tryAssignVar2 = tryNext.getVar().getName();
-
-        if (!(tryNext.getValue() instanceof SyncCall))
-            return new NoMatch("No method call at next line");
-
-        SyncCall syncallstmt2 = (SyncCall) tryNext.getValue();
-
-        if (!(syncallstmt2.getCalleeNoTransform() instanceof VarUse))
-            return new NoMatch("No method call on variable at next line");
-
-        tryCallVar2 = ((VarUse) syncallstmt2.getCalleeNoTransform()).getName();
-
-        tryEndMethod = syncallstmt2.getMethod();
-
-        if (!tryAssignVar1.equals(tryCallVar2))
-            return new NoMatch("Variable being assigned to at line not equal " +
-                                     "to method call variable in next line");
-
-        return new Pattern1Match(tryMatch,tryNext,block,tryAssignVar1,tryAssignVar2,
-                                 tryCallVar1,tryCallVar2,tryMiddleMethod,tryEndMethod);
-    }
 
 }
