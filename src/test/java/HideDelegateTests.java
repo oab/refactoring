@@ -155,6 +155,32 @@ public class HideDelegateTests {
 
 	}
 
+	@Test
+	public void makemethodTest() throws Exception {
+		String file = makemethod;
+		Main entry = new Main();
+		Model in = entry.parse(Collections.singletonList(new File(file)));
+		assert (in!=null);
+		String outFile = file.replaceFirst(".abs","-after.abs");
+		PrintWriter writer = new PrintWriter(outFile);
+		ABSFormatter formatter = new DefaultABSFormatter(writer);
+
+		HideDelegate r = new HideDelegate(in);
+		try {
+			Refactoring.Match m = r.getMatch(inModule,inClass,inMethod,44,45);
+			assert(m != null);
+			r.refactor(m);
+
+		} catch (MatchException e) {
+			System.out.println(e.getMessage());
+
+		}
+
+		in.doPrettyPrint(writer,formatter);
+		Model out = entry.parse(Collections.singletonList(new File(outFile)));
+		assertFalse(out.hasErrors());
+	}
+
 
 
 }

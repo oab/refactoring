@@ -2,6 +2,9 @@ package refactoring;
 
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.KindedName;
+import org.abs_models.frontend.typechecker.Type;
+
+import java.util.Collection;
 
 // TODO: Split finding instances/first instance from actual refactoring?
 
@@ -34,6 +37,7 @@ public class HideDelegate extends Refactoring {
     static String varMissmatch = "Variable %s used in assignment at line %d " +
                                  "not the same as the variable %s used in call at line %d";
     static String expectingVar = "expecting variable use, not field use at line %d";
+    static String expectingI =   "expecting interface type for variable %s in line %d";
 
     private class HideDelegateMatch extends Match {
         private VarUse line1AssignVar;
@@ -44,8 +48,8 @@ public class HideDelegate extends Refactoring {
         private SyncCall line2SyncCall;
         private AssignStmt line2AssignStmt;
         private List<Stmt> line2InStmts;
-        //private InterfaceDecl usingI;
-        //private ClassDecl usingC;
+        private InterfaceDecl usingI;
+        private ClassDecl usingC;
 
         public HideDelegateMatch(String inModule, String inClass, String inMethod,
                                  int line1, int line2) throws MatchException {
@@ -66,18 +70,18 @@ public class HideDelegate extends Refactoring {
 
             List<Stmt> mstmts = mImpl.getBlockNoTransform().getStmtList();
 
-            Stmt s1 = getStmtAtLine(mstmts,line1);
-            if(s1 == null) throw new MatchException(String.format(lineNotFound,line1));
-            Stmt s2 = getStmtAtLine(mstmts,line2);
-            if(s2 == null) throw new MatchException(String.format(lineNotFound,line2));
+            Stmt line1Stmt = getStmtAtLine(mstmts,line1);
+            if(line1Stmt == null) throw new MatchException(String.format(lineNotFound,line1));
+            Stmt line2Stmt = getStmtAtLine(mstmts,line2);
+            if(line2Stmt == null) throw new MatchException(String.format(lineNotFound,line2));
 
-            if(!(s1 instanceof AssignStmt))
+            if(!(line1Stmt instanceof AssignStmt))
                 throw new MatchException(String.format(noAssigmStmt,line1));
-            AssignStmt line1AssignStmt = (AssignStmt) s1;
+            AssignStmt line1AssignStmt = (AssignStmt) line1Stmt;
 
-            if(!(s2 instanceof AssignStmt))
+            if(!(line2Stmt instanceof AssignStmt))
                 throw new MatchException(String.format(noAssigmStmt,line2));
-            line2AssignStmt = (AssignStmt) s2;
+            line2AssignStmt = (AssignStmt) line2Stmt;
 
             Exp line1AssignValue = line1AssignStmt.getValue();
             if(!(line1AssignValue instanceof SyncCall))
@@ -115,6 +119,12 @@ public class HideDelegate extends Refactoring {
             if (!var1.equals(var2)) {
                 throw new MatchException(String.format(varMissmatch, var1, line1, var2, line2));
             }
+
+            Type line1CallVarType =  line1CallVar.getType();
+            Decl line1CallVarTypeDecl = line1CallVarType.getDecl();
+            if(!(line1CallVarTypeDecl instanceof InterfaceDecl))
+                throw new MatchException(String.format(expectingI, line1CallVar.getName(), line1));
+            usingI = (InterfaceDecl) line1CallVarTypeDecl;
         }
 
         private Stmt getStmtAtLine(List<Stmt> stmts, int line) {
@@ -153,7 +163,37 @@ public class HideDelegate extends Refactoring {
 
             // Now we must ensure that
             // 1. the interface of callVar1 implements call2
-            // 2. Any class implementing that interface implements call2
+            // 2. Any class implementing that interface implemnts call2
+
+            // Note 1
+            // usingI.getAllMethodSigs().contains(line2SyncCall.getMethodSig().getName());
+            // will work on the string name of the sig as shown, but it is more work as
+            // the method actually constructs a collection, it does not just return some already constructed one
+
+            // Note 2
+            // Using equals is clearly not the right way to compare
+
+            String line2signame = line2SyncCall.getMethodSig().getName();
+            boolean foundSig = false;
+            for (MethodSig sig : usingI.getBodys()) {
+              String signame = sig.getName();
+              if(signame.equals(line2signame)) {
+                  foundSig = true;
+              }
+            }
+            if(!foundSig) {
+                usingI.addBody(line2SyncCall.getMethodSig().copy());
+            }
+
+
+
+
+            //Collection<MethodSig> methodSigs = line1CallVarType.getAllMethodSigs();
+            //MethodSig line2SyncCallSig = line2SyncCall.getMethodSig());
+
+            //if(!methodSigs.contains(line2SyncCallSig) {
+            //    methodSigs.add(line2SyncCallSig);
+            //}
 
 
 

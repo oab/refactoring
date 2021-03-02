@@ -4,7 +4,6 @@ interface ClientI {
     Unit  enquire(Bool rem);
 }
 interface PersonI {
-  // PersonI getManager(); Must add
   DeptI getDept();
 }
 
@@ -14,13 +13,6 @@ interface DeptI {
 }
 
 class Person(DeptI d) implements PersonI {
-
-    // BEFORE: unused.
-    // PersonI getManager() {
-	//  PersonI p=d.getManager();
-	//  return p;
-    // }
-
   DeptI getDept() {
       return d;
   }
