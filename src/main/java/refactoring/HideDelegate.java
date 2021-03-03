@@ -200,12 +200,8 @@ public class HideDelegate extends Refactoring {
             // for all classes implementing the delegate call
             for(ClassDecl cdecl : serverC) {
                 if(cdecl.lookupMethod(delegateCall.getMethod()) == null) {
-                    String field;
-                    List<FieldDecl> cdeclfields = cdecl.getFieldList();
-
                     MethodSig sig = delegateCall.getMethodSig().copy();
                     cdecl.addMethod(makeMethod(sig,serverCall.getMethodSig().copy()));
-
                 }
             }
         }
