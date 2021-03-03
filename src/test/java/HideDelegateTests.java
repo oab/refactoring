@@ -141,7 +141,6 @@ public class HideDelegateTests {
 
 		} catch (MatchException e) {
 			System.out.println(e.getMessage());
-
 		}
 
 	    //assertEquals("d",m.assignVar1);
