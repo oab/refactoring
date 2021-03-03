@@ -191,42 +191,41 @@ public class HideDelegate extends Refactoring {
 
             // Now we must ensure that
             // 1. the interface of callVar1 implements call2
-            // 2. Any class implementing that interface implemnts call2
+            // 2. Any class implementing that interface implements call2
 
-            // Note 1
-            // usingI.getAllMethodSigs().contains(line2SyncCall.getMethodSig().getName());
-            // will work on the string name of the sig as shown, but it is more work as
-            // the method actually constructs a collection, it does not just return some already constructed one
-
-            // Note 2
-            // Using equals is clearly not the right way to compare
-
+            // Add the delegate call to the server interface if not present
             if(serverI.lookupMethod(delegateCall.getMethodSig().getName()) == null) {
                 serverI.addBody(delegateCall.getMethodSig().copy());
             }
-
-
-            // for all classes implementing the delegate
+            // for all classes implementing the delegate call
             for(ClassDecl cdecl : serverC) {
                 if(cdecl.lookupMethod(delegateCall.getMethod()) == null) {
+                    String field;
                     List<FieldDecl> cdeclfields = cdecl.getFieldList();
+
                     MethodSig sig = delegateCall.getMethodSig().copy();
-                    cdecl.addMethod(makeMethod(sig,serverCall.getMethod(),"d","p"));
+                    cdecl.addMethod(makeMethod(sig,serverCall.getMethodSig().copy()));
+
                 }
             }
+        }
+        // TODO: must ensure temporaries are unbound wherever this is inserted
+        private MethodImpl makeMethod(MethodSig sig1, MethodSig sig2) {
+            String temp1="temp1";
+            String temp2="temp2";
+            InterfaceTypeUse tu1 = new InterfaceTypeUse(sig2.getReturnType().getName(), new List<>());
+            InterfaceTypeUse tu2 = new InterfaceTypeUse(sig1.getReturnType().getName(), new List<>());
+            SyncCall call1 = new SyncCall(new VarUse("this"),sig2.getName(), new List<>());
+            SyncCall call2 = new SyncCall(new VarUse(temp1),sig1.getName(), new List<>());
+            VarDecl decl1 = new VarDecl(temp1, tu1, new Opt<Exp>(call1));
+            VarDecl decl2 = new VarDecl(temp2, tu2, new Opt<Exp>(call2));
+            VarDeclStmt stmt1 = new VarDeclStmt(new List<>(),decl1);
+            VarDeclStmt stmt2 = new VarDeclStmt(new List<>(),decl2);
+            ReturnStmt stmt3 = new ReturnStmt(new List<>(),new VarUse(temp2));
+            return new MethodImpl(sig1,new Block().addStmt(stmt1).addStmt(stmt2).addStmt(stmt3));
 
-
-            //MethodImpl hiddenDelegate = new MethodImpl(delegateCall.getMethodSig().copy(), )
         }
 
-        // TODO: must ensure temp is unbound?
-        private MethodImpl makeMethod(MethodSig sig,String mcall, String field,String temp) {
-            SyncCall call =  new SyncCall(new FieldUse(field),mcall ,new List<>());
-            VarDecl decl = new VarDecl(temp, new InterfaceTypeUse(sig.getReturnType().getName(), new List<>()), new Opt<>(call));
-            VarDeclStmt stmt1 = new VarDeclStmt(new List<>(),decl);
-            ReturnStmt stmt2 = new ReturnStmt(new List<>(),new VarUse(temp));
-            return new MethodImpl(sig,new Block().addStmt(stmt1).addStmt(stmt2));
-        }
 
     }
 
