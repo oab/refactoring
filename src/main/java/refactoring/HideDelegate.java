@@ -50,9 +50,7 @@ public class HideDelegate extends Refactoring {
         private AssignStmt delegateStmt;
         private List<Stmt> delegateStmtList;
         private InterfaceDecl serverI;
-        private InterfaceDecl delegateI;
         private ArrayList<ClassDecl> serverC;
-        private ArrayList<ClassDecl> delegateC;
 
         // Split this up?
         public HideDelegateMatch(String inModule, String inClass, String inMethod,
@@ -128,8 +126,7 @@ public class HideDelegate extends Refactoring {
 
             serverI = findInterface(delegateCallVar,line1);
             serverC = findImplementingClasses(serverI,mDecl.getDecls());
-            delegateI = findInterface(serverCallVar,line2);
-            delegateC = findImplementingClasses(delegateI,mDecl.getDecls());
+            InterfaceDecl delegateI = findInterface(serverCallVar, line2);
         }
 
         private InterfaceDecl findInterface(VarUse v, int l) throws MatchException {
@@ -197,7 +194,7 @@ public class HideDelegate extends Refactoring {
             if(serverI.lookupMethod(delegateCall.getMethodSig().getName()) == null) {
                 serverI.addBody(delegateCall.getMethodSig().copy());
             }
-            // for all classes implementing the delegate call
+            // for all classes implementing the delegate call insert the  needed method body
             for(ClassDecl cdecl : serverC) {
                 if(cdecl.lookupMethod(delegateCall.getMethod()) == null) {
                     MethodSig sig = delegateCall.getMethodSig().copy();
@@ -205,6 +202,7 @@ public class HideDelegate extends Refactoring {
                 }
             }
         }
+
         // TODO: must ensure temporaries are unbound wherever this is inserted
         private MethodImpl makeMethod(MethodSig sig1, MethodSig sig2) {
             String temp1="temp1";
@@ -219,7 +217,6 @@ public class HideDelegate extends Refactoring {
             VarDeclStmt stmt2 = new VarDeclStmt(new List<>(),decl2);
             ReturnStmt stmt3 = new ReturnStmt(new List<>(),new VarUse(temp2));
             return new MethodImpl(sig1,new Block().addStmt(stmt1).addStmt(stmt2).addStmt(stmt3));
-
         }
 
 

@@ -154,6 +154,16 @@ public class HideDelegateTests {
 
 	}
 
+	/*
+	        PrintWriter writer = new PrintWriter(new OutputStreamWriter(stream), true);
+        // Set line separator back to default value
+        System.setProperty("line.separator", System.lineSeparator());
+        ABSFormatter formatter = new DefaultABSFormatter(writer);
+        model.doPrettyPrint(writer, formatter);
+
+
+	 */
+
 	@Test
 	public void makemethodTest() throws Exception {
 		String file = makemethod;
@@ -174,6 +184,7 @@ public class HideDelegateTests {
 			System.out.println(e.getMessage());
 
 		}
+
 
 		in.doPrettyPrint(writer,formatter);
 		Model out = entry.parse(Collections.singletonList(new File(outFile)));
