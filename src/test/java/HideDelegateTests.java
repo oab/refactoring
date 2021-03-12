@@ -75,7 +75,8 @@ public class HideDelegateTests {
 
 		HideDelegate r = new HideDelegate(in);
 		try {
-			Refactoring.Match m = r.getMatch(inModule,inClass,inMethod,52,53);
+			HideDelegateMatch m = r.getMatch(inModule,inClass,inMethod,52,53);
+
 			assert(m != null);
 			r.refactor(m);
 
@@ -104,7 +105,7 @@ public class HideDelegateTests {
 
 		HideDelegate r = new HideDelegate(in);
 		try {
-			Refactoring.Match m = r.getMatch(inModule,inClass,inMethod,53,54);
+			HideDelegateMatch m = r.getMatch(inModule,inClass,inMethod,53,54);
 			assert(m != null);
 			r.refactor(m);
 
@@ -135,7 +136,7 @@ public class HideDelegateTests {
 
 		HideDelegate r = new HideDelegate(in);
 		try {
-			Refactoring.Match m = r.getMatch(inModule,inClass,inMethod,52,54);
+			HideDelegateMatch m = r.getMatch(inModule,inClass,inMethod,52,54);
 			assert(m != null);
 			r.refactor(m);
 
@@ -160,8 +161,6 @@ public class HideDelegateTests {
         System.setProperty("line.separator", System.lineSeparator());
         ABSFormatter formatter = new DefaultABSFormatter(writer);
         model.doPrettyPrint(writer, formatter);
-
-
 	 */
 
 	@Test
@@ -176,7 +175,7 @@ public class HideDelegateTests {
 
 		HideDelegate r = new HideDelegate(in);
 		try {
-			Refactoring.Match m = r.getMatch(inModule,inClass,inMethod,44,45);
+			HideDelegateMatch m = r.getMatch(inModule,inClass,inMethod,44,45);
 			assert(m != null);
 			r.refactor(m);
 
