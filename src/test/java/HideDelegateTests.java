@@ -18,6 +18,8 @@ import org.abs_models.frontend.parser.*;
 import org.abs_models.frontend.typechecker.KindedName;
 import org.abs_models.frontend.typechecker.KindedName.Kind;
 
+import javax.xml.transform.Source;
+
 public class HideDelegateTests {
 
 	/*
@@ -60,8 +62,8 @@ public class HideDelegateTests {
 		int s2absoluteLine = s2.getStartLine();
 		assertThat(s1absoluteLine,equalTo(52));
 		assertThat(s2absoluteLine,equalTo(53));
-
 	}
+
 
 	@Test
 	public void hideDelegatePlainTest() throws Exception {
@@ -73,12 +75,11 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		HideDelegate r = new HideDelegate(in);
 		try {
-			HideDelegateMatch m = r.getMatch(inModule,inClass,inMethod,52,53);
+			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,53);
 
 			assert(m != null);
-			r.refactor(m);
+			HideDelegate.refactor(m);
 
 		} catch (MatchException e) {
 			System.out.println(e.getMessage());
@@ -86,10 +87,7 @@ public class HideDelegateTests {
 		}
 
 		in.doPrettyPrint(writer,formatter);
-
 		Model out = entry.parse(Collections.singletonList(new File(outFile)));
-		/* TODO: There's a warning in the JavaDoc here, also maybe check the
-			       ABS unit-tests on what's the best way to check for correct output. */
 		assertFalse(out.hasErrors());
 	}
 
@@ -103,11 +101,10 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		HideDelegate r = new HideDelegate(in);
 		try {
-			HideDelegateMatch m = r.getMatch(inModule,inClass,inMethod,53,54);
+			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,53,54);
 			assert(m != null);
-			r.refactor(m);
+			HideDelegate.refactor(m);
 
 		} catch (MatchException e) {
 			System.out.println(e.getMessage());
@@ -134,11 +131,10 @@ public class HideDelegateTests {
 							are input enough, and the constructor only matches the structure.
 							If you want to be safe, you'd afterwards match names. */
 
-		HideDelegate r = new HideDelegate(in);
 		try {
-			HideDelegateMatch m = r.getMatch(inModule,inClass,inMethod,52,54);
+			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,54);
 			assert(m != null);
-			r.refactor(m);
+			HideDelegate.refactor(m);
 
 		} catch (MatchException e) {
 			System.out.println(e.getMessage());
@@ -155,14 +151,6 @@ public class HideDelegateTests {
 
 	}
 
-	/*
-	        PrintWriter writer = new PrintWriter(new OutputStreamWriter(stream), true);
-        // Set line separator back to default value
-        System.setProperty("line.separator", System.lineSeparator());
-        ABSFormatter formatter = new DefaultABSFormatter(writer);
-        model.doPrettyPrint(writer, formatter);
-	 */
-
 	@Test
 	public void makemethodTest() throws Exception {
 		String file = makemethod;
@@ -173,23 +161,18 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		HideDelegate r = new HideDelegate(in);
 		try {
-			HideDelegateMatch m = r.getMatch(inModule,inClass,inMethod,44,45);
+			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,44,45);
 			assert(m != null);
-			r.refactor(m);
+			HideDelegate.refactor(m);
 
 		} catch (MatchException e) {
 			System.out.println(e.getMessage());
-
 		}
-
 
 		in.doPrettyPrint(writer,formatter);
 		Model out = entry.parse(Collections.singletonList(new File(outFile)));
 		assertFalse(out.hasErrors());
 	}
-
-
 
 }

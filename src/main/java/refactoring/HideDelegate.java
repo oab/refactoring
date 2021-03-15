@@ -13,13 +13,7 @@ import org.abs_models.frontend.ast.*;
 
 public class HideDelegate {
 
-    Model m;
-
-    public HideDelegate(Model m) {
-       this.m = m;
-    }
-
-    public HideDelegateMatch getMatch(String inModule, String inClass, String inMethod,
+    public static HideDelegateMatch getMatch(Model m,String inModule, String inClass, String inMethod,
                           int line1, int line2) throws MatchException {
         return new HideDelegateMatch(m, inModule,inClass,inMethod,line1,line2);
     }
@@ -28,7 +22,7 @@ public class HideDelegate {
     // will then invalidate the other matches.
 
 
-    public void refactor(HideDelegateMatch match) {
+    public static void refactor(HideDelegateMatch match) {
         // Perform transformation
         // Pre :
         // assignVar1 = callVar1.call1(...)
@@ -57,7 +51,7 @@ public class HideDelegate {
     }
 
     // TODO: must ensure temporaries are unbound wherever this is inserted
-    private MethodImpl makeMethod(MethodSig sig1, MethodSig sig2) {
+    private static MethodImpl makeMethod(MethodSig sig1, MethodSig sig2) {
         String temp1 = "temp1";
         String temp2 = "temp2";
         InterfaceTypeUse tu1 = new InterfaceTypeUse(sig2.getReturnType().getName(), new List<>());

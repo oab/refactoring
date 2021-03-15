@@ -6,6 +6,7 @@ import org.abs_models.frontend.typechecker.Type;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 
 // A match here is when bracketed parts are equal
@@ -22,6 +23,7 @@ public class HideDelegateMatch {
     static String expectingVar = "expecting variable use, not field use at line %d";
     static String expectingI =   "expecting interface type for variable %s in line %d";
 
+
     VarUse delegateVar;
     VarUse serverVar;
     VarUse delegateCallVar;
@@ -34,7 +36,12 @@ public class HideDelegateMatch {
     ArrayList<ClassDecl> serverC;
 
     // Split this up?
-    protected HideDelegateMatch(Model model, String inModule, String inClass, String inMethod,
+
+    HideDelegateMatch(Model m, String file, int line1, int line2) {
+
+    }
+
+    HideDelegateMatch(Model model, String inModule, String inClass, String inMethod,
                              int line1, int line2) throws MatchException {
 
         ModuleDecl mDecl = model.lookupModule(inModule);
@@ -54,69 +61,39 @@ public class HideDelegateMatch {
 
         List<Stmt> mstmts = mImpl.getBlockNoTransform().getStmtList();
 
-        Stmt serverStmt = getStmtAtLine(mstmts, line1);
-        if (serverStmt == null) throw new MatchException(String.format(lineNotFound, line1));
+        AssignStmt serverStmt = cast(getStmtAtLine(mstmts, line1), AssignStmt.class, noAssigmStmt, line1);
+        delegateStmt = cast(getStmtAtLine(mstmts, line2), AssignStmt.class, noAssigmStmt, line2);
 
-        Stmt delegateStmt = getStmtAtLine(mstmts, line2);
-        if (delegateStmt == null) throw new MatchException(String.format(lineNotFound, line2));
+        serverCall = cast(serverStmt.getValue(), SyncCall.class, noCall, line1);
 
+        delegateCall = cast(this.delegateStmt.getValue(), SyncCall.class, noCall, line2);
 
-        if (!(serverStmt instanceof AssignStmt))
-            throw new MatchException(String.format(noAssigmStmt, line1));
-        AssignStmt line1AssignStmt = (AssignStmt) serverStmt;
+        delegateVar = cast(serverStmt.getVar(), VarUse.class, expectingVar, line1);
 
-        if (!(delegateStmt instanceof AssignStmt))
-            throw new MatchException(String.format(noAssigmStmt, line2));
-        this.delegateStmt = (AssignStmt) delegateStmt;
+        serverVar = cast(this.delegateStmt.getVar(), VarUse.class, expectingVar, line2);
 
-        Exp line1AssignValue = line1AssignStmt.getValue();
-        if (!(line1AssignValue instanceof SyncCall))
-            throw new MatchException(String.format(noCall, line1));
-        serverCall = (SyncCall) line1AssignValue;
+        delegateCallVar = cast(serverCall.getCallee(), VarUse.class, expectingVar, line2);
 
-        Exp line2AssignValue = this.delegateStmt.getValue();
-        if (!(line2AssignValue instanceof SyncCall))
-            throw new MatchException(String.format(noCall, line2));
-        delegateCall = (SyncCall) line2AssignValue;
+        serverCallVar = cast(delegateCall.getCallee(), VarUse.class, expectingVar, line2);
 
-        VarOrFieldUse line1AssignVarOrField = line1AssignStmt.getVar();
-        if (!(line1AssignVarOrField instanceof VarUse))
-            throw new MatchException(String.format(expectingVar, line1));
-        delegateVar = (VarUse) line1AssignVarOrField;
-
-        VarOrFieldUse line2AssignVarOrField = this.delegateStmt.getVar();
-        if (!(line2AssignVarOrField instanceof VarUse))
-            throw new MatchException(String.format(expectingVar, line2));
-        serverVar = (VarUse) line2AssignVarOrField;
-
-        PureExp line1SyncallExp = serverCall.getCallee();
-        if (!(line1SyncallExp instanceof VarUse))
-            throw new MatchException(String.format(expectingVar, line2));
-        delegateCallVar = (VarUse) line1SyncallExp;
-
-        PureExp line2SyncallExp = delegateCall.getCallee();
-        if (!(line2SyncallExp instanceof VarUse))
-            throw new MatchException(String.format(expectingVar, line2));
-        serverCallVar = (VarUse) line2SyncallExp;
-
-        String var1 = delegateVar.getName();
-        String var2 = serverCallVar.getName();
-
-        if (!var1.equals(var2)) {
-            throw new MatchException(String.format(varMissmatch, var1, line1, var2, line2));
+        if (!delegateVar.getName().equals(serverCallVar.getName())) {
+            throw new MatchException(String.format(varMissmatch,
+                    delegateVar.getName(), line1, serverCallVar.getName(), line2));
         }
 
-        serverI = findInterface(delegateCallVar, line1);
+        serverI = cast(delegateCallVar.getType().getDecl(),InterfaceDecl.class,
+                expectingI, delegateCallVar.getName(), line1);
+
         serverC = findImplementingClasses(serverI, mDecl.getDecls());
-        InterfaceDecl delegateI = findInterface(serverCallVar, line2);
     }
 
-    private InterfaceDecl findInterface(VarUse v, int l) throws MatchException {
-        Type t = v.getType();
-        Decl d = t.getDecl();
-        if (!(d instanceof InterfaceDecl))
-            throw new MatchException(String.format(expectingI, v.getName(), l));
-        return (InterfaceDecl) d;
+    private <From, To extends From> To cast(From o, Class<To> tclass, String error, Object... args)
+    throws MatchException{
+        if(tclass.isInstance(o)) {
+            return tclass.cast(o);
+        }
+
+        throw new MatchException(String.format(error,args));
     }
 
     private ArrayList<ClassDecl> findImplementingClasses(InterfaceDecl idecl, List<Decl> decls) {
@@ -134,14 +111,22 @@ public class HideDelegateMatch {
         return found;
     }
 
-    private Stmt getStmtAtLine(List<Stmt> stmts, int line) {
+    private Stmt getStmtAtLine(List<Stmt> stmts, int line) throws MatchException {
+        Stmt out = getStmtAtLineImpl(stmts,line);
+        if(out == null) {
+            throw new MatchException(String.format(lineNotFound, line));
+        }
+        return out;
+    }
+
+    private Stmt getStmtAtLineImpl(List<Stmt> stmts, int line) {
         Stmt out = null;
         for (Stmt s : stmts) {
             if (s instanceof Block) {
                 Block b = (Block) s;
                 List<Stmt> nested = b.getStmtList();
 
-                Stmt nestout = getStmtAtLine(nested, line);
+                Stmt nestout = getStmtAtLineImpl(nested, line);
                 if (nestout != null) {
                     out = nestout;
                     delegateStmtList = nested;
