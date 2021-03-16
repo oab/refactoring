@@ -10,7 +10,7 @@ import java.util.Optional;
 
 
 // A match here is when bracketed parts are equal
-// [assignVar1] = callVar1.m1
+// [delegateVar] = callVar1.m1
 // assignVar2 = [callVar2].m2
 public class HideDelegateMatch {
 
@@ -34,8 +34,6 @@ public class HideDelegateMatch {
     List<Stmt> delegateStmtList;
     InterfaceDecl serverI;
     ArrayList<ClassDecl> serverC;
-
-    // Split this up?
 
     HideDelegateMatch(Model m, String file, int line1, int line2) {
 

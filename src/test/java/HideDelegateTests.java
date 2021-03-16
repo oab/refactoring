@@ -78,7 +78,6 @@ public class HideDelegateTests {
 		try {
 			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,53);
 
-			assert(m != null);
 			HideDelegate.refactor(m);
 
 		} catch (MatchException e) {
@@ -103,7 +102,6 @@ public class HideDelegateTests {
 
 		try {
 			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,53,54);
-			assert(m != null);
 			HideDelegate.refactor(m);
 
 		} catch (MatchException e) {
@@ -133,7 +131,6 @@ public class HideDelegateTests {
 
 		try {
 			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,54);
-			assert(m != null);
 			HideDelegate.refactor(m);
 
 		} catch (MatchException e) {
