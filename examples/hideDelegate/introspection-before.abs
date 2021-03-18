@@ -1,23 +1,23 @@
 module HideDelegate;
 
-interface HasCog {
-  Int getCog();
-}
-
 interface ClientI {
-    Unit enquire(Bool rem);
+  Unit enquire(Bool rem);
+  Int getCog();
 }
 
 interface PersonI {
   DeptI getDept();
+  Int getCog();
+
 }
 
 interface DeptI {
   PersonI getManager();
   Unit setManager(PersonI m);
+  Int getCog();
 }
 
-class Person(Int cog, DeptI d) implements PersonI, HasCog {
+class Person(Int cog, DeptI d) implements PersonI {
 
   DeptI getDept() {
       return d;
@@ -28,7 +28,7 @@ class Person(Int cog, DeptI d) implements PersonI, HasCog {
   }
 }
 
-class Dept(Int cog) implements DeptI, HasCog {
+class Dept(Int cog) implements DeptI {
   PersonI m;
   
   PersonI getManager() {
@@ -45,17 +45,19 @@ class Dept(Int cog) implements DeptI, HasCog {
 
 }
 
-class Client(Int cog) implements ClientI, HasCog {
-  Unit enquire(Bool remote){
+class Client(Int cog) implements ClientI {
+  Unit enquire(Bool remote) {
     DeptI d;
+    
     if (remote) {
       d = new Dept(cog+1);
     } else {
       d = new local Dept(cog);
     }
-     
-    PersonI m = new Person(cog+1,d);
-    PersonI p = new Person(cog+2,d);
+    
+    Int dcog = d.getCog();
+    PersonI m = new Person(dcog+1,d);
+    PersonI p = new Person(dcog+2,d);
     d.setManager(m);
 
     /* Client -> Person; Client -> Department */
@@ -69,6 +71,7 @@ class Client(Int cog) implements ClientI, HasCog {
 }
 
 {
-  ClientI c = new Client(1);
+  println("test");
+  ClientI c = new Client(0);
   c.enquire(False);
 }
