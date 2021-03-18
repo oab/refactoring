@@ -1,0 +1,66 @@
+module HideDelegate;
+
+import * from ABS.Meta;
+
+interface ClientI {
+    Unit  enquire(Bool rem);
+}
+interface PersonI {
+  PersonI getManager();
+  DeptI getDept();
+}
+
+interface DeptI {
+  PersonI getManager();
+  Unit setManager(PersonI m);
+}
+
+class Person(DeptI d) implements PersonI {
+
+    // BEFORE: unused.
+    PersonI getManager() {
+	  PersonI p=d.getManager();
+	  return p;
+  }
+
+  DeptI getDept() {
+      return d;
+  }
+}
+
+class Dept implements DeptI {
+    PersonI m;
+    PersonI getManager() {
+	  return m;
+    }
+    Unit setManager(PersonI p) {
+	  m = p;
+    }
+}
+
+class Client implements ClientI {
+    Unit enquire(Bool remote){
+	  DeptI d;
+	  if (remote) {
+	      d = new Dept();
+	  } else {
+	      d = new local Dept();
+	  }
+	  PersonI m = new Person(d);
+	  PersonI p = new Person(d);
+	  d.setManager(m);
+
+	  /* Client -> Person; Client -> Department */
+	  d = p.getDept();
+	  m = d.getManager();
+    }
+}
+
+{
+    ClientI c = new Client();
+    Set<Object> cs = set(Nil);
+    ObjectMirror m = reflect(c);
+    Cog cog = m.getCog();
+    cs = insertElement(cs,cog);
+    c.enquire(False);
+}
