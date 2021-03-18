@@ -1,0 +1,86 @@
+module HideDelegate;
+
+interface ClientI {
+  Unit enquire(Bool rem);
+  Int getCog();
+}
+
+interface PersonI {
+  DeptI getDept(Set<Int> cogs);
+  PersonI getManager(Set<Int> cogs);
+  Int getCog();
+
+}
+
+interface DeptI {
+  PersonI getManager(Set<Int> cogs);
+  Unit setManager(PersonI m);
+  Int getCog();
+}
+
+class Person(Int cog, DeptI d) implements PersonI {
+  
+  PersonI getManager(Set<Int> cogs) {
+    Int dcog = d.getCog();
+    assert dcog == cog || !contains(cogs,dcog);
+    PersonI p = d.getManager(set[cog,dcog]);
+    return p;
+  }
+
+  DeptI getDept(Set<Int> cogs) {
+      return d;
+  }
+
+  Int getCog() {
+    return cog;  	
+  }
+}
+
+class Dept(Int cog) implements DeptI {
+  PersonI m;
+  
+  PersonI getManager(Set<Int> cogs) {
+    return m;
+  }
+  
+  Unit setManager(PersonI p) {
+    m = p;
+  }
+
+  Int getCog() {
+    return cog;  	
+  }
+
+}
+
+class Client(Int cog) implements ClientI {
+  Unit enquire(Bool remote) {
+    DeptI d;
+    
+    if (remote) {
+      d = new Dept(cog+1);
+    } else {
+      d = new local Dept(cog);
+    }
+    
+    Int dcog = d.getCog();
+    PersonI m = new Person(dcog+1,d);
+    PersonI p = new Person(dcog+2,d);
+    d.setManager(m);
+
+    /* Client -> Person -> Department */
+    
+    Int pcog = p.getCog();
+
+    m = p.getManager(set[cog,pcog]);
+  }
+
+  Int getCog() {
+    return cog;  	
+  }
+}
+
+{
+  ClientI c = new Client(0);
+  c.enquire(False);
+}
