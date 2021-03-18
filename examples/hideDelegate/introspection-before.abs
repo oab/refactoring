@@ -1,0 +1,76 @@
+module HideDelegate;
+
+interface HasCog {
+  Int getCog();
+}
+
+interface ClientI {
+    Unit enquire(Bool rem);
+}
+
+interface PersonI {
+  PersonI getManager();
+  DeptI getDept();
+}
+
+interface DeptI {
+  PersonI getManager();
+  Unit setManager(PersonI m);
+}
+
+class Person(Int cog, DeptI d) implements PersonI, HasCog {
+
+  DeptI getDept() {
+      return d;
+  }
+
+  Int getCog() {
+    return cog;  	
+  }
+
+}
+
+class Dept implements DeptI, HasCog {
+  PersonI m;
+  
+  PersonI getManager() {
+    return m;
+  }
+  
+  Unit setManager(PersonI p) {
+    m = p;
+  }
+
+  Int getCog() {
+    return cog;  	
+  }
+
+}
+
+class Client(Int cog) implements ClientI, HasCog {
+  Unit enquire(Bool remote){
+    DeptI d;
+    if (remote) {
+      d = new Dept();
+    } else {
+      d = new local Dept(cog);
+    }
+     
+    PersonI m = new Person(d);
+    PersonI p = new Person(d);
+    d.setManager(m);
+
+    /* Client -> Person; Client -> Department */
+    d = p.getDept();
+    m = d.getManager();
+  }
+
+  Int getCog() {
+    return cog;  	
+  }
+}
+
+{
+    ClientI c = new Client(0);
+    c.enquire(False);
+}
