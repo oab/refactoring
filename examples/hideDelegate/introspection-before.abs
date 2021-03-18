@@ -6,20 +6,20 @@ interface ClientI {
 }
 
 interface PersonI {
-  DeptI getDept();
+  DeptI getDept(List<Int> cogs);
   Int getCog();
 
 }
 
 interface DeptI {
-  PersonI getManager();
+  PersonI getManager(List<Int> cogs);
   Unit setManager(PersonI m);
   Int getCog();
 }
 
 class Person(Int cog, DeptI d) implements PersonI {
 
-  DeptI getDept() {
+  DeptI getDept(List<Int> cogs) {
       return d;
   }
 
@@ -31,7 +31,7 @@ class Person(Int cog, DeptI d) implements PersonI {
 class Dept(Int cog) implements DeptI {
   PersonI m;
   
-  PersonI getManager() {
+  PersonI getManager(List<Int> cogs) {
     return m;
   }
   
@@ -61,8 +61,12 @@ class Client(Int cog) implements ClientI {
     d.setManager(m);
 
     /* Client -> Person; Client -> Department */
-    d = p.getDept();
-    m = d.getManager();
+    
+    Int pcog = p.getCog();
+
+    d = p.getDept(list[cog,pcog]);
+    m = d.getManager(list[cog,dcog]);
+    
   }
 
   Int getCog() {
