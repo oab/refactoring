@@ -18,6 +18,7 @@ interface CogMap {
   [Atomic] Unit add(Object o, Int cog);
   Maybe<Int> lookup(Object o);
   Bool hasCog(Int cog);
+  Unit dump(); 
 }
 
 class CogMap implements CogMap {
@@ -37,6 +38,14 @@ class CogMap implements CogMap {
    return contains(cs,cog);
   }
 
+  Unit dump() {
+    println("<Object,Cog> mapping: ");
+    List<Pair<Object, Int>> es = entries(cm);
+    foreach(e in es) {
+      println(toString(e));
+    }
+  }
+
 }
 
 
@@ -47,6 +56,8 @@ class Person(CogMap gm, Int cog, DeptI d) implements PersonI {
 
   PersonI getManager() {
     println("Enter getManager");
+
+    gm.dump();
     
     Maybe<Int> dbind = gm.lookup(d);
 
