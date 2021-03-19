@@ -6,7 +6,7 @@ interface ClientI {
 
 interface PersonI {
   DeptI getDept();
-  PersonI getManager();
+  PersonI getManager(Int fromCog);
 }
 
 interface DeptI {
@@ -54,7 +54,7 @@ class Person(CogMap gm, Int cog, DeptI d) implements PersonI {
     gm.add(this,cog);
   }
 
-  PersonI getManager() {
+  PersonI getManager(Int fromCog) {
     println("Enter getManager");
 
     gm.dump();
@@ -64,8 +64,7 @@ class Person(CogMap gm, Int cog, DeptI d) implements PersonI {
     switch(dbind) {
       Just(dcog) => {
           println("Enter assertion");
-	  Bool dcogInCogMap = gm.hasCog(dcog);
-          assert dcog == cog || !dcogInCogMap;
+          assert dcog == cog || fromCog != dcog;
 	}
       Nothing => {
           println("Should be unreachable");
@@ -73,7 +72,6 @@ class Person(CogMap gm, Int cog, DeptI d) implements PersonI {
 	}
     }
     
-    //assert dcog == cog || !contains(cogs,dcog);
     PersonI p = d.getManager();
 
     println("Leave getManager");
@@ -121,7 +119,7 @@ class Client(CogMap gm, Int cog) implements ClientI {
     d.setManager(m);
 
     /* Client -> Person -> Department */
-    m = p.getManager();
+    m = p.getManager(cog);
   }
 
 }
@@ -129,5 +127,5 @@ class Client(CogMap gm, Int cog) implements ClientI {
 {
   CogMap gm = new CogMap();
   ClientI c = new Client(gm,0);
-  c.enquire(False);
+  c.enquire(True);
 }
