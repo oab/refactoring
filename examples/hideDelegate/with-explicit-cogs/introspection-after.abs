@@ -127,5 +127,5 @@ class Client(CogMap gm, Int cog) implements ClientI {
 {
   CogMap gm = new CogMap();
   ClientI c = new Client(gm,0);
-  c.enquire(True);
+  c.enquire(False);
 }

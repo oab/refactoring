@@ -64,6 +64,28 @@ public class HideDelegateTests {
 		assertThat(s2absoluteLine,equalTo(53));
 	}
 
+	@Test
+     public void compilationUnitTest() throws Exception {
+		Main entry = new Main();
+		Model m = entry.parse(Collections.singletonList(new File(plain)));
+		List<CompilationUnit> cunits = m.getCompilationUnitList();
+
+		SourcePosition found = null;
+		for (CompilationUnit cunit : cunits) {
+			String name = cunit.getFileName();
+
+			if(name.equals(plain)) {
+
+				//obviously the wrong ASTNode to pick
+				ASTNode start = cunit.getChild(0);
+				found = SourcePosition.findPosition(start,52,0);
+			}
+		}
+		System.out.println(found.getContextNode().toString());
+
+
+	 }
+
 
 	@Test
 	public void hideDelegatePlainTest() throws Exception {
