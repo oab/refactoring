@@ -81,7 +81,7 @@ public class HideDelegateTests {
 				found = SourcePosition.findPosition(start,52,0);
 			}
 		}
-		System.out.println(found.getContextNode().toString());
+		assertThat(found.getContextNode(),instanceOf(AssignStmt.class));
 
 
 	 }
