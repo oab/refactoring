@@ -77,11 +77,11 @@ public class HideDelegateTests {
 			if(name.equals(plain)) {
 
 				//obviously the wrong ASTNode to pick
-				ASTNode start = cunit.getChild(0);
-				found = SourcePosition.findPosition(start,52,0);
+				ASTNode start = m.getCompilationUnit(0);
+				found = SourcePosition.findPosition(start,53,8);
 			}
 		}
-		assertThat(found.getContextNode(),instanceOf(AssignStmt.class));
+		assertThat(found.getContextNode().getParent().getParent(),instanceOf(AssignStmt.class));
 
 
 	 }
