@@ -45,15 +45,25 @@ public class HideDelegate {
         for (ClassDecl cdecl : match.serverC) {
             if (cdecl.lookupMethod(match.delegateCall.getMethod()) == null) {
                 MethodSig sig = match.delegateCall.getMethodSig().copy();
-                cdecl.addMethod(makeMethod(sig, match.serverCall.getMethodSig().copy()));
+                // should these names perhaps be taken from the matching lines
+                String name1 = "temp1";
+                String name2 = "temp2";
+
+                while(cdecl.locallookupVarOrFieldName(name1,false) != null) {
+                    name1 += "_";
+                }
+
+                while(cdecl.locallookupVarOrFieldName(name2,false) != null) {
+                    name2 += "_";
+                }
+                cdecl.addMethod(makeMethod(sig, match.serverCall.getMethodSig().copy(),name1,name2));
+
             }
         }
     }
 
     // TODO: must ensure temporaries are unbound wherever this is inserted
-    private static MethodImpl makeMethod(MethodSig sig1, MethodSig sig2) {
-        String temp1 = "temp1";
-        String temp2 = "temp2";
+    private static MethodImpl makeMethod(MethodSig sig1, MethodSig sig2, String temp1, String temp2) {
         InterfaceTypeUse tu1 = new InterfaceTypeUse(sig2.getReturnType().getName(), new List<>());
         InterfaceTypeUse tu2 = new InterfaceTypeUse(sig1.getReturnType().getName(), new List<>());
         SyncCall call1 = new SyncCall(new VarUse("this"), sig2.getName(), new List<>());

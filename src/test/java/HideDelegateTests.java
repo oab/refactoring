@@ -38,6 +38,7 @@ public class HideDelegateTests {
 	String interleaved = "examples/hideDelegate/interleaved.abs";
 	String defused = "examples/hideDelegate/def-used.abs";
 	String makemethod = "examples/hideDelegate/makemethod.abs";
+	String makemethodclash = "examples/hideDelegate/makemethodclash.abs";
 	String inModule = "HideDelegate";
 	String inClass = "Client";
 	String inMethod = "enquire";
@@ -191,6 +192,30 @@ public class HideDelegateTests {
 
 		try {
 			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,44,45);
+			assert(m != null);
+			HideDelegate.refactor(m);
+
+		} catch (MatchException e) {
+			System.out.println(e.getMessage());
+		}
+
+		in.doPrettyPrint(writer,formatter);
+		Model out = entry.parse(Collections.singletonList(new File(outFile)));
+		assertFalse(out.hasErrors());
+	}
+
+	@Test
+	public void makemethodclashTest() throws Exception {
+		String file = makemethodclash;
+		Main entry = new Main();
+		Model in = entry.parse(Collections.singletonList(new File(file)));
+		assert (in!=null);
+		String outFile = file.replaceFirst(".abs","-after.abs");
+		PrintWriter writer = new PrintWriter(outFile);
+		ABSFormatter formatter = new DefaultABSFormatter(writer);
+
+		try {
+			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,47,48);
 			assert(m != null);
 			HideDelegate.refactor(m);
 
