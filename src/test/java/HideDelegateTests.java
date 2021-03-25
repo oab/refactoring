@@ -70,18 +70,27 @@ public class HideDelegateTests {
 		Model m = entry.parse(Collections.singletonList(new File(plain)));
 		List<CompilationUnit> cunits = m.getCompilationUnitList();
 
+		PrintWriter writer = new PrintWriter(System.out);
+		ABSFormatter formatter = new DefaultABSFormatter(writer);
+
 		SourcePosition found = null;
 		for (CompilationUnit cunit : cunits) {
 			String name = cunit.getFileName();
 
 			if(name.equals(plain)) {
-
 				//obviously the wrong ASTNode to pick
-				ASTNode start = m.getCompilationUnit(0);
-				found = SourcePosition.findPosition(start,53,8);
+				//ASTNode start = cunit.getChild(0);
+				System.out.println(name);
+				found = SourcePosition.findPosition(cunit,52,8);
+				System.out.println(found.getLine());
+				System.out.println(found.getContextNode().getStartLine());
+				System.out.println(found.getContextNode().getEndLine());
 			}
 		}
-		assertThat(found.getContextNode().getParent().getParent(),instanceOf(AssignStmt.class));
+
+		assert (found != null);
+		System.out.println(found.getContextNode().toString());
+		assertThat(found.getContextNode(),instanceOf(AssignStmt.class));
 
 
 	 }

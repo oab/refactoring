@@ -23,7 +23,6 @@ public class HideDelegateMatch {
     static String expectingVar = "expecting variable use, not field use at line %d";
     static String expectingI =   "expecting interface type for variable %s in line %d";
 
-
     VarUse delegateVar;
     VarUse serverVar;
     VarUse delegateCallVar;
