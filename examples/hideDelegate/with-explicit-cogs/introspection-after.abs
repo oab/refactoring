@@ -18,13 +18,14 @@ interface CogMap {
   [Atomic] Unit add(Object o, Int cog);
   Maybe<Int> lookup(Object o);
   Bool hasCog(Int cog);
-  Unit dump(); 
+  Unit dump();
+  Bool checkCOG(Int me, Int caller, Object callee);
 }
 
 class CogMap implements CogMap {
   Map<Object,Int> cm = map[];
   Set<Int> cs = set[];
-  
+
   [Atomic] Unit add(Object o, Int cog) {
     cm = put(cm,o,cog);
     cs = insertElement(cs,cog);
@@ -46,10 +47,31 @@ class CogMap implements CogMap {
     }
   }
 
+  // TODO: Bool checkCOG(Int me, List<Int> callchain, Object callee) {
+  Bool checkCOG(Int me, Int caller, Object callee) {
+  Bool retVal = False;
+    Maybe<Int> dbind = this.lookup(callee);
+    switch(dbind) {
+      Just(dcog) => {
+          println("Enter assertion");
+          // Either we're going to make a sync call to ourselves,
+          //  or we're NOT calling back into the person that called us.
+          // assert dcog == cog || fromCog != dcog;
+          // TODO: return dcog == me || dcog \elem callchain;
+        retVal = dcog == me || caller != dcog;
+      }
+      Nothing => {
+        println("Should be unreachable");
+        retVal = False;
+      }
+  }
+  return retVal;
+}
 }
 
 
 class Person(CogMap gm, Int cog, DeptI d) implements PersonI {
+  Bool invTrue = True; // Model assertion in KeY-ABS
   {
     gm.add(this,cog);
   }
@@ -58,20 +80,9 @@ class Person(CogMap gm, Int cog, DeptI d) implements PersonI {
     println("Enter getManager");
 
     gm.dump();
-    
-    Maybe<Int> dbind = gm.lookup(d);
 
-    switch(dbind) {
-      Just(dcog) => {
-          println("Enter assertion");
-          assert dcog == cog || fromCog != dcog;
-	}
-      Nothing => {
-          println("Should be unreachable");
-          assert False;
-	}
-    }
-    
+    Bool tmp = gm.checkCOG(cog, fromCog, d);
+    invTrue = invTrue && tmp;
     PersonI p = d.getManager();
 
     println("Leave getManager");
@@ -88,11 +99,11 @@ class Dept(CogMap gm, Int cog) implements DeptI {
   {
     gm.add(this,cog);
   }
-  
+
   PersonI getManager() {
     return m;
   }
-  
+
   Unit setManager(PersonI p) {
     m = p;
   }
@@ -103,14 +114,16 @@ class Client(CogMap gm, Int cog) implements ClientI {
   {
     gm.add(this,cog);
   }
-  
+
   Unit enquire(Bool remote) {
     DeptI d;
-    Int dcog = when remote then cog+1 else cog;
+    Int dcog = -1;
 
     if (remote) {
+      dcog = cog+1;
       d = new Dept(gm,dcog);
     } else {
+      dcog = cog;
       d = new local Dept(gm,dcog);
     }
 
@@ -119,7 +132,7 @@ class Client(CogMap gm, Int cog) implements ClientI {
     d.setManager(m);
 
     /* Client -> Person -> Department */
-    m = p.getManager(cog);
+    PersonI manager = p.getManager(cog);
   }
 
 }
@@ -127,5 +140,6 @@ class Client(CogMap gm, Int cog) implements ClientI {
 {
   CogMap gm = new CogMap();
   ClientI c = new Client(gm,0);
+  // False -> DL
   c.enquire(False);
 }
