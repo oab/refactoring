@@ -1,0 +1,141 @@
+module HideDelegate;
+
+interface ClientI {
+  Unit enquire(Bool rem);
+}
+
+interface PersonI {
+  DeptI getDept();
+
+  //Refactoring adds this
+  //PersonI getManager(Int fromCog);
+}
+
+interface DeptI {
+  PersonI getManager();
+  Unit setManager(PersonI m);
+}
+
+interface CogMap {
+  [Atomic] Unit add(Object o, Int cog);
+  Maybe<Int> lookup(Object o);
+  Bool hasCog(Int cog);
+  Unit dump();
+  Bool checkCOG(Int me, Int caller, Object callee);
+}
+
+class CogMap implements CogMap {
+  Map<Object,Int> cm = map[];
+  Set<Int> cs = set[];
+
+  [Atomic] Unit add(Object o, Int cog) {
+    cm = put(cm,o,cog);
+    cs = insertElement(cs,cog);
+  }
+
+  Maybe<Int> lookup(Object o) {
+    return lookup(cm,o);
+  }
+
+  Bool hasCog(Int cog) {
+   return contains(cs,cog);
+  }
+
+  Unit dump() {
+    List<Pair<Object, Int>> es = entries(cm);
+  }
+
+  // TODO: Bool checkCOG(Int me, List<Int> callchain, Object callee) {
+  Bool checkCOG(Int me, Int caller, Object callee) {
+  Bool retVal = False;
+    Maybe<Int> dbind = this.lookup(callee);
+    switch(dbind) {
+      Just(dcog) => {
+          // Either we're going to make a sync call to ourselves,
+          //  or we're NOT calling back into the person that called us.
+          // assert dcog == cog || fromCog != dcog;
+          // TODO: return dcog == me || dcog \elem callchain;
+        retVal = dcog == me || caller != dcog;
+      }
+      Nothing => {
+        retVal = False;
+      }
+  }
+  return retVal;
+}
+}
+
+
+class Person(CogMap gm, Int cog, DeptI d) implements PersonI {
+  //Bool invTrue = True; // Model assertion in KeY-ABS
+  {
+    gm.add(this,cog);
+  }
+
+  // Refactoring adds this
+  //
+  // PersonI getManager(Int fromCog) {
+  //  Fut<Bool> ftmp = gm!checkCOG(cog, fromCog, d);
+  //  Bool tmp = ftmp.get;
+  //  invTrue = invTrue && tmp;
+  //  Fut<PersonI> pf = d!getManager();
+  //  PersonI p = pf.get;
+  //
+  //  return p;
+  //}
+
+  DeptI getDept() {
+    return d;
+  }
+}
+
+class Dept(CogMap gm, Int cog) implements DeptI {
+  PersonI m;
+  {
+    gm.add(this,cog);
+  }
+
+  PersonI getManager() {
+    return m;
+  }
+
+  Unit setManager(PersonI p) {
+    m = p;
+  }
+
+}
+
+class Client(CogMap gm, Int cog) implements ClientI {
+  {
+    gm.add(this,cog);
+  }
+
+  Unit enquire(Bool remote) {
+    DeptI d;
+    Int dcog = -1;
+
+    if (remote) {
+      dcog = cog+1;
+      d = new Dept(gm,dcog);
+    } else {
+      dcog = cog;
+      d = new local Dept(gm,dcog);
+    }
+
+    PersonI m = new Person(gm, dcog+1,d);
+    PersonI p = new Person(gm, dcog+2,d);
+    d.setManager(m);
+
+    /* Client -> Person; Client  -> Department */
+    DeptI department = p.getDept();
+    PersonI manager = department.getManager();
+  }
+
+}
+
+{
+  CogMap gm = new CogMap();
+  ClientI c = new Client(gm,0);
+  // False/True -> no DL
+  c.enquire(False);
+}
