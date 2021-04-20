@@ -133,14 +133,8 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		try {
-			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,53,54);
-			HideDelegate.refactor(m);
-
-		} catch (MatchException e) {
-			System.out.println(e.getMessage());
-
-		}
+		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,53,54);
+		HideDelegate.refactor(m);
 
 		in.doPrettyPrint(writer,formatter);
 		Model out = entry.parse(Collections.singletonList(new File(outFile)));
@@ -162,13 +156,8 @@ public class HideDelegateTests {
 							are input enough, and the constructor only matches the structure.
 							If you want to be safe, you'd afterwards match names. */
 
-		try {
-			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,54);
-			HideDelegate.refactor(m);
-
-		} catch (MatchException e) {
-			System.out.println(e.getMessage());
-		}
+		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,54);
+		HideDelegate.refactor(m);
 
 	    //assertEquals("d",m.assignVar1);
 		//assertEquals("d",((VarOrFieldUse) ((SyncCall) m.syncallstmt2).getCallee()).getName());
@@ -191,14 +180,9 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		try {
-			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,44,45);
-			assert(m != null);
-			HideDelegate.refactor(m);
-
-		} catch (MatchException e) {
-			System.out.println(e.getMessage());
-		}
+		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,44,45);
+		assert(m != null);
+		HideDelegate.refactor(m);
 
 		in.doPrettyPrint(writer,formatter);
 		Model out = entry.parse(Collections.singletonList(new File(outFile)));
@@ -215,14 +199,9 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		try {
-			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,47,48);
-			assert(m != null);
-			HideDelegate.refactor(m);
-
-		} catch (MatchException e) {
-			System.out.println(e.getMessage());
-		}
+		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,47,48);
+		assert(m != null);
+		HideDelegate.refactor(m);
 
 		in.doPrettyPrint(writer,formatter);
 		Model out = entry.parse(Collections.singletonList(new File(outFile)));
