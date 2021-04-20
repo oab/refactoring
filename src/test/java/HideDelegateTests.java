@@ -2,14 +2,15 @@ package refactoring;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 
 import org.abs_models.backend.prettyprint.ABSFormatter;
 import org.abs_models.backend.prettyprint.DefaultABSFormatter;
 import org.junit.*;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
@@ -104,22 +105,22 @@ public class HideDelegateTests {
 		Model in = entry.parse(Collections.singletonList(new File(file)));
 		assert (in!=null);
 		String outFile = file.replaceFirst(".abs","-after.abs");
+		String expectedFile = file.replaceFirst(".abs","-after-expected.abs");
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		try {
-			HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,53);
-
-			HideDelegate.refactor(m);
-
-		} catch (MatchException e) {
-			System.out.println(e.getMessage());
-
-		}
+		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,53);
+		HideDelegate.refactor(m);
 
 		in.doPrettyPrint(writer,formatter);
 		Model out = entry.parse(Collections.singletonList(new File(outFile)));
 		assertFalse(out.hasErrors());
+		/* TODO: Avoid reading in again; also apache.commons may have something better. */
+		Path expectedPath = Path.of("", "").resolve(expectedFile);
+        	String expectedContent = Files.readString(expectedPath);
+		Path outPath = Path.of("", "").resolve(outFile);
+        	String outContent = Files.readString(outPath);
+		assertThat(outContent.toString(), is(expectedContent));
 	}
 
 	@Test
