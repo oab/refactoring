@@ -34,10 +34,9 @@ public class HideDelegateTests {
 			 each file may have its own exact incantation of the
 			 refactoring.
 	*/
-	String plain = "examples/hideDelegate/plain.abs";
+	String methodpresent = "examples/hideDelegate/methodpresent.abs";
 	String block = "examples/hideDelegate/block.abs";
 	String interleaved = "examples/hideDelegate/interleaved.abs";
-	String defused = "examples/hideDelegate/def-used.abs";
 	String makemethod = "examples/hideDelegate/makemethod.abs";
 	String makemethodclash = "examples/hideDelegate/makemethodclash.abs";
 	String inModule = "HideDelegate";
@@ -47,7 +46,7 @@ public class HideDelegateTests {
 	@Test
 	public void astTest() throws Exception {
 		Main entry = new Main();
-		Model m = entry.parse(Collections.singletonList(new File(plain)));
+		Model m = entry.parse(Collections.singletonList(new File(methodpresent)));
 		assert (m!=null);
 		ModuleDecl mod = m.lookupModule(inModule);
 		assert (mod!=null);
@@ -76,7 +75,7 @@ public class HideDelegateTests {
 	@Test
      public void compilationUnitTest() throws Exception {
 		Main entry = new Main();
-		Model m = entry.parse(Collections.singletonList(new File(plain)));
+		Model m = entry.parse(Collections.singletonList(new File(methodpresent)));
 		List<CompilationUnit> cunits = m.getCompilationUnitList();
 
 		PrintWriter writer = new PrintWriter(System.out);
@@ -86,7 +85,7 @@ public class HideDelegateTests {
 		for (CompilationUnit cunit : cunits) {
 			String name = cunit.getFileName();
 
-			if(name.equals(plain)) {
+			if(name.equals(methodpresent)) {
 				System.out.println(name);
 
 				for(int i=1;i<23;i++) {
@@ -106,8 +105,8 @@ public class HideDelegateTests {
 
 
 	@Test
-	public void hideDelegatePlainTest() throws Exception {
-		String file = plain;
+	public void hideDelegateMethodpresentTest() throws Exception {
+		String file = methodpresent;
 		Main entry = new Main();
 		Model in = entry.parse(Collections.singletonList(new File(file)));
 		assert (in!=null);
@@ -122,6 +121,7 @@ public class HideDelegateTests {
 		in.doPrettyPrint(writer,formatter);
 		Model out = entry.parse(Collections.singletonList(new File(outFile)));
 		assertFalse(out.hasErrors());
+
 		/* TODO: Avoid reading in again; also apache.commons may have something better. */
 		Path expectedPath = Path.of("", "").resolve(expectedFile);
         	String expectedContent = Files.readString(expectedPath);
