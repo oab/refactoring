@@ -1,5 +1,3 @@
-import org.gradle.api.provider.Property
-
 plugins {
     id 'java'
     id 'java-library'
@@ -8,7 +6,7 @@ project.version = '0.1.0'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(15)
+        languageVersion = JavaLanguageVersion.of(16)
     }
 }
 
@@ -19,7 +17,12 @@ compileJava {
 }
 
 test {
-    testLogging.showStandardStreams = true
+    useJUnitPlatform {
+        includeEngines 'junit-jupiter'
+    }
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 jar {
@@ -28,22 +31,16 @@ jar {
     }
 }
 
-
-
-// For now this should work, but the build should depend on
-// the source of the git repo; fetch, build and use.
-
-
 repositories {
+    mavenCentral()
     flatDir {
         dirs 'libs'
     }
 }
 
 dependencies {
-    testImplementation 'junit:junit:4.13.1'
-    testImplementation group: 'org.hamcrest', name: 'hamcrest-core', version: '1.3'
-    //implementation 'info.picocli:picocli:4.5.2'
-    //annotationProcessor 'info.picocli:picocli-codegen:4.5.2'
+    testImplementation("org.hamcrest:hamcrest:2.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.7.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1")
     implementation files('libs/absfrontend.jar')
 }

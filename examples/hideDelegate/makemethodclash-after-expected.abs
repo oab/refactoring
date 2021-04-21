@@ -1,0 +1,62 @@
+module HideDelegate;
+
+
+
+interface ClientI {
+  Unit enquire(Bool rem);}
+
+interface PersonI {
+  DeptI getDept();
+  PersonI getManager();}
+
+interface DeptI {
+  PersonI getManager();
+  Unit setManager(PersonI m);}
+
+class Person(DeptI d) implements PersonI {
+  Int temp1 = 3;
+  Int temp2 = 1;
+  
+  DeptI getDept(){
+    return this.d;
+  }
+  PersonI getManager(){
+    DeptI temp1_ = this.getDept();
+    PersonI temp2_ = temp1_.getManager();
+    return temp2_;
+  }
+  }
+
+class Dept implements DeptI {
+  PersonI m;
+  
+  PersonI getManager(){
+    return this.m;
+  }
+  Unit setManager(PersonI p){
+    this.m = p;
+  }
+  }
+
+class Client implements ClientI {
+  
+  
+  Unit enquire(Bool remote){
+    DeptI d;
+    if ( remote ){
+      d = new Dept();
+    } else {
+      d = new local Dept();
+    }
+    PersonI m = new Person(d);
+    PersonI p = new Person(d);
+    d.setManager(m);
+    m = p.getManager();
+  }
+  }
+
+
+{
+  ClientI c = new Client();
+  c.enquire(False);
+}

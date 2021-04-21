@@ -1,5 +1,21 @@
 package refactoring;
 
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.Arguments;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -8,11 +24,6 @@ import java.util.Collections;
 
 import org.abs_models.backend.prettyprint.ABSFormatter;
 import org.abs_models.backend.prettyprint.DefaultABSFormatter;
-import org.junit.*;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
 
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.*;
@@ -39,20 +50,18 @@ public class HideDelegateTests {
 	String interleaved = "examples/hideDelegate/interleaved.abs";
 	String makemethod = "examples/hideDelegate/makemethod.abs";
 	String makemethodclash = "examples/hideDelegate/makemethodclash.abs";
-	String inModule = "HideDelegate";
-	String inClass = "Client";
-	String inMethod = "enquire";
+
 
 	@Test
 	public void astTest() throws Exception {
 		Main entry = new Main();
-		Model m = entry.parse(Collections.singletonList(new File(methodpresent)));
+		Model m = entry.parse(Collections.singletonList(new File("examples/hideDelegate/methodpresent.abs")));
 		assert (m!=null);
-		ModuleDecl mod = m.lookupModule(inModule);
+		ModuleDecl mod = m.lookupModule("HideDelegate");
 		assert (mod!=null);
-		ClassDecl c = (ClassDecl)mod.lookup(new KindedName(Kind.CLASS,inClass));
+		ClassDecl c = (ClassDecl)mod.lookup(new KindedName(Kind.CLASS,"Client"));
 		assert (c!=null);
-		MethodImpl md = c.lookupMethod(inMethod);
+		MethodImpl md = c.lookupMethod("enquire");
 		assert (md!=null);
 		int n = 5;
 		Stmt s1 = md.getBlock().getStmt(n);
@@ -104,9 +113,11 @@ public class HideDelegateTests {
 	 */
 
 
-	@Test
-	public void hideDelegateMethodpresentTest() throws Exception {
-		String file = methodpresent;
+	@ParameterizedTest
+	@MethodSource("testFiles")
+	public void hideDelegateTest(String name, int line1, int line2) throws Exception {
+		String file = "examples/hideDelegate/" + name;
+
 		Main entry = new Main();
 		Model in = entry.parse(Collections.singletonList(new File(file)));
 		assert (in!=null);
@@ -115,7 +126,7 @@ public class HideDelegateTests {
 		PrintWriter writer = new PrintWriter(outFile);
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
-		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,53);
+		HideDelegateMatch m = HideDelegate.getMatch(in,"HideDelegate","Client","enquire",line1,line2);
 		HideDelegate.refactor(m);
 
 		in.doPrettyPrint(writer,formatter);
@@ -130,89 +141,14 @@ public class HideDelegateTests {
 		assertThat(outContent.toString(), is(expectedContent));
 	}
 
-	@Test
-	public void hideDelegateBlockTest() throws Exception {
-		String file = block;
-		Main entry = new Main();
-		Model in = entry.parse(Collections.singletonList(new File(file)));
-		assert (in!=null);
-		String outFile = file.replaceFirst(".abs","-after.abs");
-		PrintWriter writer = new PrintWriter(outFile);
-		ABSFormatter formatter = new DefaultABSFormatter(writer);
-
-		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,53,54);
-		HideDelegate.refactor(m);
-
-		in.doPrettyPrint(writer,formatter);
-		Model out = entry.parse(Collections.singletonList(new File(outFile)));
-		assertFalse(out.hasErrors());
-	}
-
-	@Test
-	public void interleavedTest() throws Exception {
-		String file = interleaved;
-		Main entry = new Main();
-		Model in = entry.parse(Collections.singletonList(new File(file)));
-		assert (in!=null);
-		String outFile = file.replaceFirst(".abs","-after.abs");
-
-		PrintWriter writer = new PrintWriter(outFile);
-		ABSFormatter formatter = new DefaultABSFormatter(writer);
-
-		/* TODO: Still redundant. For a unit-test, probably just the line numbers
-							are input enough, and the constructor only matches the structure.
-							If you want to be safe, you'd afterwards match names. */
-
-		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,52,54);
-		HideDelegate.refactor(m);
-
-	    //assertEquals("d",m.assignVar1);
-		//assertEquals("d",((VarOrFieldUse) ((SyncCall) m.syncallstmt2).getCallee()).getName());
-		/* TODO: I think it's okay of there's a hacky way to create Match
-		         from the sample just for this test here (or via line numbers, or ...) */
-
-		in.doPrettyPrint(writer,formatter);
-		Model out = entry.parse(Collections.singletonList(new File(outFile)));
-		assertFalse(out.hasErrors());
-
-	}
-
-	@Test
-	public void makemethodTest() throws Exception {
-		String file = makemethod;
-		Main entry = new Main();
-		Model in = entry.parse(Collections.singletonList(new File(file)));
-		assert (in!=null);
-		String outFile = file.replaceFirst(".abs","-after.abs");
-		PrintWriter writer = new PrintWriter(outFile);
-		ABSFormatter formatter = new DefaultABSFormatter(writer);
-
-		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,44,45);
-		assert(m != null);
-		HideDelegate.refactor(m);
-
-		in.doPrettyPrint(writer,formatter);
-		Model out = entry.parse(Collections.singletonList(new File(outFile)));
-		assertFalse(out.hasErrors());
-	}
-
-	@Test
-	public void makemethodclashTest() throws Exception {
-		String file = makemethodclash;
-		Main entry = new Main();
-		Model in = entry.parse(Collections.singletonList(new File(file)));
-		assert (in!=null);
-		String outFile = file.replaceFirst(".abs","-after.abs");
-		PrintWriter writer = new PrintWriter(outFile);
-		ABSFormatter formatter = new DefaultABSFormatter(writer);
-
-		HideDelegateMatch m = HideDelegate.getMatch(in,inModule,inClass,inMethod,47,48);
-		assert(m != null);
-		HideDelegate.refactor(m);
-
-		in.doPrettyPrint(writer,formatter);
-		Model out = entry.parse(Collections.singletonList(new File(outFile)));
-		assertFalse(out.hasErrors());
+	private static Stream<Arguments> testFiles() {
+		return Stream.of(
+				Arguments.of("methodpresent.abs", 52,53),
+				Arguments.of("block.abs", 53, 54),
+				Arguments.of("interleaved.abs",52,54),
+				Arguments.of("makemethod.abs",44,45),
+				Arguments.of("makemethodclash.abs",47,48)
+		);
 	}
 
 }
