@@ -2,12 +2,9 @@ package refactoring;
 
 import org.abs_models.frontend.ast.*;
 
-// TODO: Split finding instances/first instance from actual refactoring?
-
 // Matching against e.g
 // 1. d = p.getDept();
 // 2. m = d.getManager();
-// Assume p also implements getManager (TODO assume -> ensure)
 // remove 1. and 2. and replace with 3.
 // 3. m = p.getManager();
 
@@ -62,7 +59,6 @@ public class HideDelegate {
         }
     }
 
-    // TODO: must ensure temporaries are unbound wherever this is inserted
     private static MethodImpl makeMethod(MethodSig sig1, MethodSig sig2, String temp1, String temp2) {
         InterfaceTypeUse tu1 = new InterfaceTypeUse(sig2.getReturnType().getName(), new List<>());
         InterfaceTypeUse tu2 = new InterfaceTypeUse(sig1.getReturnType().getName(), new List<>());
@@ -75,6 +71,4 @@ public class HideDelegate {
         ReturnStmt stmt3 = new ReturnStmt(new List<>(), new VarUse(temp2));
         return new MethodImpl(sig1, new Block().addStmt(stmt1).addStmt(stmt2).addStmt(stmt3));
     }
-
-
 }

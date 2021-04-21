@@ -66,6 +66,13 @@ public class HideDelegateTests {
 		assertThat(s2absoluteLine,equalTo(53));
 	}
 
+   /* Notes: This was tested in hopes that we could pick out through the SourcePosition.findPosition
+	  some ASTNode at a (line,column). This might not be the node we are looking for as we do not know
+	  ahead of time at which column some root node that we are looking for starts. Therefore to use this
+	  we need to check all possible columns. In that case using this we are doing strictly more work calling
+	  this function on each column rather than just iterating through the statement at this line, gotten through
+	  other means
+
 	@Test
      public void compilationUnitTest() throws Exception {
 		Main entry = new Main();
@@ -80,22 +87,22 @@ public class HideDelegateTests {
 			String name = cunit.getFileName();
 
 			if(name.equals(plain)) {
-				//obviously the wrong ASTNode to pick
-				//ASTNode start = cunit.getChild(0);
 				System.out.println(name);
-				found = SourcePosition.findPosition(cunit,52,8);
-				System.out.println(found.getLine());
-				System.out.println(found.getContextNode().getStartLine());
-				System.out.println(found.getContextNode().getEndLine());
+
+				for(int i=1;i<23;i++) {
+					found = SourcePosition.findPosition(cunit, 52, i);
+					System.out.println(found.getContextNode().getStartColumn());
+					System.out.println(found.getContextNode().toString());
+				}
 			}
 		}
 
 		assert (found != null);
-		System.out.println(found.getContextNode().toString());
 		assertThat(found.getContextNode(),instanceOf(AssignStmt.class));
 
-
 	 }
+
+	 */
 
 
 	@Test
