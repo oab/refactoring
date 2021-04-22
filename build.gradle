@@ -11,8 +11,6 @@ java {
 }
 
 compileJava {
-    // reverting to java 8
-    //options.compilerArgs += ['--enable-preview']
     options.release = 8
 }
 

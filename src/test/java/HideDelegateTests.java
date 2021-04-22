@@ -5,6 +5,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -30,8 +32,6 @@ import org.abs_models.frontend.parser.*;
 import org.abs_models.frontend.typechecker.KindedName;
 import org.abs_models.frontend.typechecker.KindedName.Kind;
 
-import javax.xml.transform.Source;
-
 public class HideDelegateTests {
 
 	/*
@@ -39,18 +39,6 @@ public class HideDelegateTests {
 	 * 1. d = p.getDept();
 	 * 2. m = d.getManager();
      */
-
-	/* TODO: JUnit has a pattern for a set of input files,
-	     actually we want pairs of (filename, Match), since
-			 each file may have its own exact incantation of the
-			 refactoring.
-	*/
-	String methodpresent = "examples/hideDelegate/methodpresent.abs";
-	String block = "examples/hideDelegate/block.abs";
-	String interleaved = "examples/hideDelegate/interleaved.abs";
-	String makemethod = "examples/hideDelegate/makemethod.abs";
-	String makemethodclash = "examples/hideDelegate/makemethodclash.abs";
-
 
 	@Test
 	public void astTest() throws Exception {
@@ -115,12 +103,11 @@ public class HideDelegateTests {
 
 	@ParameterizedTest
 	@MethodSource("testFiles")
-	public void hideDelegateTest(String name, int line1, int line2) throws Exception {
-		String file = "examples/hideDelegate/" + name;
+	public void hideDelegateTest(String file, int line1, int line2) throws Exception {
+		Path inPath = Path.of("examples","hideDelegate",file);
 
 		Main entry = new Main();
-		Model in = entry.parse(Collections.singletonList(new File(file)));
-		assert (in!=null);
+		Model in = entry.parse(Collections.singletonList(inPath.toFile()));
 		String outFile = file.replaceFirst(".abs","-after.abs");
 		String expectedFile = file.replaceFirst(".abs","-after-expected.abs");
 		PrintWriter writer = new PrintWriter(outFile);
@@ -134,11 +121,18 @@ public class HideDelegateTests {
 		assertFalse(out.hasErrors());
 
 		/* TODO: Avoid reading in again; also apache.commons may have something better. */
-		Path expectedPath = Path.of("", "").resolve(expectedFile);
+		Path expectedPath = Path.of("examples", "hideDelegate").resolve(expectedFile);
         	String expectedContent = Files.readString(expectedPath);
-		Path outPath = Path.of("", "").resolve(outFile);
+		Path outPath = Path.of("examples", "hideDelegate").resolve(outFile);
         	String outContent = Files.readString(outPath);
-		assertThat(outContent.toString(), is(expectedContent));
+		assertTrue(stripWsEq(expectedContent,outContent));
+
+	}
+
+	private static boolean stripWsEq(String a, String b) {
+		String x = a.replaceAll("\\s+","");
+		String y = b.replaceAll("\\s+","");
+		return x.equals(y);
 	}
 
 	private static Stream<Arguments> testFiles() {
