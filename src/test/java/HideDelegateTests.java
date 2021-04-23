@@ -62,7 +62,7 @@ public class HideDelegateTests {
 		assertThat(s2absoluteLine,equalTo(53));
 	}
 
-   /* Notes: This was tested in hopes that we could pick out through the SourcePosition.findPosition
+   /* Note: This was tested in hopes that we could pick out through the SourcePosition.findPosition
 	  some ASTNode at a (line,column). This might not be the node we are looking for as we do not know
 	  ahead of time at which column some root node that we are looking for starts. Therefore to use this
 	  we need to check all possible columns. In that case using this we are doing strictly more work calling
@@ -104,31 +104,36 @@ public class HideDelegateTests {
 	@ParameterizedTest
 	@MethodSource("testFiles")
 	public void hideDelegateTest(String file, int line1, int line2) throws Exception {
+
+		String outFile = file.replaceFirst(".abs","-after.abs");
+		String expectedFile = file.replaceFirst(".abs","-after-expected.abs");
+
 		Path inPath = Path.of("examples","hideDelegate",file);
+		Path outPath = Path.of("examples", "hideDelegate").resolve(outFile);
+		Path expectedPath = Path.of("examples", "hideDelegate").resolve(expectedFile);
 
 		Main entry = new Main();
 		Model in = entry.parse(Collections.singletonList(inPath.toFile()));
-		String outFile = file.replaceFirst(".abs","-after.abs");
-		String expectedFile = file.replaceFirst(".abs","-after-expected.abs");
-		PrintWriter writer = new PrintWriter(outFile);
+
+		PrintWriter writer = new PrintWriter(outPath.toFile());
 		ABSFormatter formatter = new DefaultABSFormatter(writer);
 
 		HideDelegateMatch m = HideDelegate.getMatch(in,"HideDelegate","Client","enquire",line1,line2);
 		HideDelegate.refactor(m);
 
 		in.doPrettyPrint(writer,formatter);
-		Model out = entry.parse(Collections.singletonList(new File(outFile)));
+		Model out = entry.parse(Collections.singletonList(outPath.toFile()));
 		assertFalse(out.hasErrors());
 
 		/* TODO: Avoid reading in again; also apache.commons may have something better. */
-		Path expectedPath = Path.of("examples", "hideDelegate").resolve(expectedFile);
-        	String expectedContent = Files.readString(expectedPath);
-		Path outPath = Path.of("examples", "hideDelegate").resolve(outFile);
-        	String outContent = Files.readString(outPath);
+        String expectedContent = Files.readString(expectedPath);
+		String outContent = Files.readString(outPath);
+
 		assertTrue(stripWsEq(expectedContent,outContent));
 
 	}
 
+	// Note: Remember to not put any comments in any expected files
 	private static boolean stripWsEq(String a, String b) {
 		String x = a.replaceAll("\\s+","");
 		String y = b.replaceAll("\\s+","");

@@ -54,9 +54,9 @@ public class HideDelegate {
                     name2 += "_";
                 }
                 cdecl.addMethod(makeMethod(sig, match.serverCall.getMethodSig().copy(),name1,name2));
-
             }
         }
+        // If there are no calls
     }
 
     private static MethodImpl makeMethod(MethodSig sig1, MethodSig sig2, String temp1, String temp2) {
