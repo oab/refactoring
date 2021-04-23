@@ -18,7 +18,6 @@ public class HideDelegate {
     // one could imagine getMatches -> [matches], but beware performing a refactoring
     // will then invalidate the other matches.
 
-
     public static void refactor(HideDelegateMatch match) {
         // Perform transformation
         // Pre :
