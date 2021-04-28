@@ -42,32 +42,28 @@ public class HideDelegate {
             if (cdecl.lookupMethod(match.delegateCall.getMethod()) == null) {
                 MethodSig sig = match.delegateCall.getMethodSig().copy();
                 // should these names perhaps be taken from the matching lines
-                String name1 = "temp1";
-                String name2 = "temp2";
+                String name = "temp";
 
-                while(cdecl.locallookupVarOrFieldName(name1,false) != null) {
-                    name1 += "_";
+                while(cdecl.locallookupVarOrFieldName(name,false) != null) {
+                    name += "_";
                 }
 
-                while(cdecl.locallookupVarOrFieldName(name2,false) != null) {
-                    name2 += "_";
-                }
-                cdecl.addMethod(makeMethod(sig, match.serverCall.getMethodSig().copy(),name1,name2));
+                cdecl.addMethod(makeMethod(sig, match.serverCall.getMethodSig().copy(),name));
             }
         }
         // If there are no calls
     }
-
-    private static MethodImpl makeMethod(MethodSig sig1, MethodSig sig2, String temp1, String temp2) {
+    /*
+     * @
+     */
+    private static MethodImpl makeMethod(MethodSig sig1, MethodSig sig2, String temp) {
         InterfaceTypeUse tu1 = new InterfaceTypeUse(sig2.getReturnType().getName(), new List<>());
         InterfaceTypeUse tu2 = new InterfaceTypeUse(sig1.getReturnType().getName(), new List<>());
         SyncCall call1 = new SyncCall(new VarUse("this"), sig2.getName(), new List<>());
-        SyncCall call2 = new SyncCall(new VarUse(temp1), sig1.getName(), new List<>());
-        VarDecl decl1 = new VarDecl(temp1, tu1, new Opt<Exp>(call1));
-        VarDecl decl2 = new VarDecl(temp2, tu2, new Opt<Exp>(call2));
-        VarDeclStmt stmt1 = new VarDeclStmt(new List<>(), decl1);
-        VarDeclStmt stmt2 = new VarDeclStmt(new List<>(), decl2);
-        ReturnStmt stmt3 = new ReturnStmt(new List<>(), new VarUse(temp2));
-        return new MethodImpl(sig1, new Block().addStmt(stmt1).addStmt(stmt2).addStmt(stmt3));
+        VarDecl decl = new VarDecl(temp, tu1, new Opt<Exp>(call1));
+        SyncCall call2 = new SyncCall(new VarUse(temp), sig1.getName(), new List<>());
+        VarDeclStmt stmt1 = new VarDeclStmt(new List<>(), decl);
+        ReturnStmt stmt2 = new ReturnStmt(new List<>(), call2);
+        return new MethodImpl(sig1, new Block().addStmt(stmt1).addStmt(stmt2));
     }
 }

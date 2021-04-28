@@ -14,16 +14,14 @@ interface DeptI {
   Unit setManager(PersonI m);}
 
 class Person(DeptI d) implements PersonI {
-  Int temp1 = 3;
-  Int temp2 = 1;
-  
+  Int temp = 3;
+
   DeptI getDept(){
     return this.d;
   }
   PersonI getManager(){
-    DeptI temp1_ = this.getDept();
-    PersonI temp2_ = temp1_.getManager();
-    return temp2_;
+    DeptI temp_ = this.getDept();
+    return temp_.getManager();
   }
   }
 

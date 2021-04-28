@@ -146,7 +146,7 @@ public class HideDelegateTests {
 				Arguments.of("block.abs", 53, 54),
 				Arguments.of("interleaved.abs",52,54),
 				Arguments.of("makemethod.abs",44,45),
-				Arguments.of("makemethodclash.abs",47,48)
+				Arguments.of("makemethodclash.abs",46,47)
 		);
 	}
 

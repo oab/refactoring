@@ -13,8 +13,7 @@ interface DeptI {
 }
 
 class Person(DeptI d) implements PersonI {
-  Int temp1=3;
-  Int temp2=1;
+  Int temp=3;
 
   DeptI getDept() {
       return d;

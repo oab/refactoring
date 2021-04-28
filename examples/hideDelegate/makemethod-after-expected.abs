@@ -20,9 +20,8 @@ class Person(DeptI d) implements PersonI {
     return this.d;
   }
   PersonI getManager(){
-    DeptI temp1 = this.getDept();
-    PersonI temp2 = temp1.getManager();
-    return temp2;
+    DeptI temp = this.getDept();
+    return temp.getManager();
   }
   }
 
