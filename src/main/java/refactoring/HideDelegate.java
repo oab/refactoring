@@ -35,6 +35,8 @@ public class HideDelegate {
 
         // Add the delegate call to the server interface if not present
         if (match.serverI.lookupMethod(match.delegateCall.getMethodSig().getName()) == null) {
+            // Note: The .addBody here is a misleading name, rather than add a body
+            // this adds a signature to an interface body
             match.serverI.addBody(match.delegateCall.getMethodSig().copy());
         }
         // for all classes implementing the delegate call insert the  needed method body
@@ -51,10 +53,11 @@ public class HideDelegate {
                 cdecl.addMethod(makeMethod(sig, match.serverCall.getMethodSig().copy(),name));
             }
         }
-        // If there are no calls
+        // Let I be the interface typing callVar1. If there are no I v elsewhere s.t. v.call1(...) occurs
+        // then call1(...) can be removed from I.
     }
     /*
-     * @
+     * TODO: Document this
      */
     private static MethodImpl makeMethod(MethodSig sig1, MethodSig sig2, String temp) {
         InterfaceTypeUse tu1 = new InterfaceTypeUse(sig2.getReturnType().getName(), new List<>());
