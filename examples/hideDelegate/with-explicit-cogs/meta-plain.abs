@@ -1,3 +1,7 @@
+/*
+This file uses reflection through ABS.Meta, which means it can't be executed with the Erlang RT.
+A dead end for now.
+*/
 module HideDelegate;
 
 import * from ABS.Meta;
