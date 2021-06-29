@@ -1,0 +1,84 @@
+module HideDelegate;
+
+import * from CogTracking;
+
+interface ClientI {
+    Unit enquire(CogSet seencogs, Bool rem);
+}
+
+interface PersonI {
+  DeptI getDept(CogSet seencogs);
+  PersonI getManager(CogSet seencogs);
+}
+
+interface DeptI {
+  PersonI getManager(CogSet seencogs);
+  Unit setManager(CogSet seencogs, PersonI m);
+}
+
+class Person(CogMap cm, CogId cogid, DeptI d) implements PersonI {
+  {
+    cm.add(this,cogid);
+  }
+
+  DeptI getDept(CogSet seencogs) {
+    seencogs = insertElement(seencogs,cogid);   
+    return d;
+  }
+  
+  PersonI getManager(CogSet seencogs) {
+    seencogs = insertElement(seencogs,cogid);  
+    DeptI temp = this.getDept(seencogs);
+    return temp.getManager(seencogs);
+  }
+}
+
+class Dept(CogMap cm, CogId cogid) implements DeptI {
+  PersonI m;
+  {
+    cm.add(this,cogid);
+  }
+  
+  PersonI getManager(CogSet seencogs) {
+    seencogs = insertElement(seencogs,cogid);   
+    return this.m;
+  }
+  Unit setManager(CogSet seencogs, PersonI p){
+    seencogs = insertElement(seencogs,cogid);  
+    this.m = p;
+  }
+}
+
+class Client(CogMap cm, CogId cogid) implements ClientI {
+  {
+    cm.add(this,cogid);
+  }
+  
+  Unit enquire(CogSet seencogs, Bool remote) {
+    seencogs = insertElement(seencogs,cogid);  
+
+    DeptI d;
+    CogId newcogid = -1;
+
+    if ( remote ) {
+      newcogid = newcogid+1;  
+      d = new Dept(cm,newcogid);
+    } else {
+      newcogid = cogid;  
+      d = new local Dept(cm,newcogid);
+    }
+    
+    PersonI m = new Person(cm,newcogid+1,d);
+    PersonI p = new Person(cm,newcogid+2,d);
+
+    d.setManager(seencogs,m);
+    m = p.getManager(seencogs);
+  }
+}
+
+{
+  CogSet seencogs = set[];    
+  CogMap cm = new CogMapper();
+  ClientI c = new Client(cm,0);
+  c.enquire(seencogs,False);
+}

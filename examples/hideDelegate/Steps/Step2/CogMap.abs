@@ -1,0 +1,32 @@
+module CogTracking;
+export *;
+
+type CogId = Int;
+type CogSet = Set<CogId>;
+
+interface CogMap {
+  [Atomic] Unit add(Object o, CogId cog);
+  Unit check(Object callee, CogSet seencogs);
+}
+
+class CogMapper implements CogMap {
+  Map<Object,Int> cm = map[];
+
+  [Atomic] Unit add(Object o, Int cog) {
+    cm = put(cm,o,cog);
+  }
+
+  // Rely on exception thrown in case of Nothing
+  CogId lookup(Object o) {
+    return case lookup(cm,o) {  Just(x) => x };
+  }
+
+  Unit check(Object callee, CogSet seencogs) {
+     CogId calleeid = this.lookup(callee);
+     assert !contains(seencogs,calleeid);
+  }
+
+
+}
+
+
