@@ -1,0 +1,33 @@
+module CogTracking;
+export *;
+
+type CogId = Int;
+type SeenCogs = Set<CogId>;
+
+interface CogMap {
+  [Atomic] Unit addFresh(Object fromNew);
+  [Atomic] Unit addSame(Object fromNewLocal, Object parent);
+  CogId lookup(Object o);
+}
+
+class CogMapper implements CogMap {
+  Int fresh = 0;
+  Map<Object,Int> m = map[];
+
+  [Atomic] Unit addFresh(Object fromNew) {
+    m = put(m,fromNew,fresh);
+    fresh = fresh + 1;
+  }
+  
+  [Atomic] Unit addSame(Object fromNewLocal, Object parent) {
+    CogId parentCogId = case lookup(m,parent) {  Just(x) => x };
+    m = put(m,fromNewLocal,parentCogId);
+  }
+
+  // Rely on exception thrown in case of Nothing
+  CogId lookup(Object o) {
+    return case lookup(m,o) {  Just(x) => x };
+  }
+}
+
+
