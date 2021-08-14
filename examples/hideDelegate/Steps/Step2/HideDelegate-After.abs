@@ -3,17 +3,17 @@ module HideDelegate;
 import * from CogTracking;
 
 interface ClientI {
-    Unit enquire(SeenCogs s, Bool rem);
+  Unit enquire(SeenCogs x_s, Bool rem);
 }
 
 interface PersonI {
-  DeptI getDept(SeenCogs s);
-  PersonI getManager(SeenCogs s);
+  DeptI getDept(SeenCogs x_s);
+  PersonI getManager(SeenCogs x_s);
 }
 
 interface DeptI {
-  PersonI getManager(SeenCogs s);
-  Unit setManager(SeenCogs s, PersonI m);
+  PersonI getManager(SeenCogs x_s);
+  Unit setManager(SeenCogs x_s, PersonI m);
 }
 
 class Person(Bool x_fresh, CogMap x_m, Object x_parent, DeptI d) implements PersonI {
@@ -25,17 +25,24 @@ class Person(Bool x_fresh, CogMap x_m, Object x_parent, DeptI d) implements Pers
     }
   }
 
-  DeptI getDept(SeenCogs s) {
-    CogId i = x_m.lookup(this);
-    s = insertElement(s,i);   
+  DeptI getDept(SeenCogs x_s) {
+    CogId x_i = x_m.lookup(this);
+    x_s = insertElement(x_s,x_i);   
+    
     return d;
   }
   
-  PersonI getManager(SeenCogs s) {
-    CogId i = x_m.lookup(this);
-    s = insertElement(s,i);  
-    DeptI temp = this.getDept(s);
-    return temp.getManager(s);
+  PersonI getManager(SeenCogs x_s) {
+    CogId x_i = x_m.lookup(this);
+    x_s = insertElement(x_s,x_i);  
+     
+    DeptI temp = this.getDept(x_s);
+    
+    // EXAMPLE ASSERT INSERTION, THIS SHOULD BE DONE PRIOR TO ANY CALL
+    CogId x_temp = x_m.lookup(temp);
+    assert x_i == x_temp ||  !contains(x_s,x_i);
+          
+    return temp.getManager(x_s);
   }
 }
 
@@ -49,14 +56,14 @@ class Dept(Bool x_fresh, CogMap x_m, Object x_parent) implements DeptI {
     }
   }
   
-  PersonI getManager(SeenCogs s) {
-    CogId i = x_m.lookup(this);
-    s = insertElement(s,i);   
+  PersonI getManager(SeenCogs x_s) {
+    CogId x_i = x_m.lookup(this);
+    x_s = insertElement(x_s,x_i);   
     return this.m;
   }
-  Unit setManager(SeenCogs s, PersonI p) {
-    CogId i = x_m.lookup(this);
-    s = insertElement(s,i);  
+  Unit setManager(SeenCogs x_s, PersonI p) {
+    CogId x_i = x_m.lookup(this);
+    x_s = insertElement(x_s,x_i);  
     this.m = p;
   }
 }
@@ -71,9 +78,9 @@ class Client(Bool x_fresh, CogMap x_m, Object x_parent) implements ClientI {
   }
 
     
-  Unit enquire(SeenCogs s, Bool remote) {
-    CogId i = x_m.lookup(this);
-    s = insertElement(s,i);  
+  Unit enquire(SeenCogs x_s, Bool remote) {
+    CogId x_i = x_m.lookup(this);
+    x_s = insertElement(x_s,x_i);  
 
     DeptI d;
 
@@ -86,8 +93,8 @@ class Client(Bool x_fresh, CogMap x_m, Object x_parent) implements ClientI {
     PersonI m = new Person(True, x_m, this, d);
     PersonI p = new Person(True, x_m, this, d);
 
-    d.setManager(s,m);
-    m = p.getManager(s);
+    d.setManager(x_s,m);
+    m = p.getManager(x_s);
   }
 }
 
