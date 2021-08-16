@@ -5,8 +5,8 @@ type CogId = Int;
 type SeenCogs = Set<CogId>;
 
 interface CogMap {
-  [Atomic] Unit addFresh(Object fromNew);
-  [Atomic] Unit addSame(Object fromNewLocal, Object parent);
+  [Atomic] Unit add(Object fromNew, CogId i);
+  CogId freshCogId();
   CogId lookup(Object o);
 }
 
@@ -14,14 +14,14 @@ class CogMapper implements CogMap {
   Int fresh = 0;
   Map<Object,Int> m = map[];
 
-  [Atomic] Unit addFresh(Object fromNew) {
-    m = put(m,fromNew,fresh);
-    fresh = fresh + 1;
+  [Atomic] Unit add(Object o, CogId i) {
+    m = put(m,o,i);
   }
   
-  [Atomic] Unit addSame(Object fromNewLocal, Object parent) {
-    CogId parentCogId = case lookup(m,parent) {  Just(x) => x };
-    m = put(m,fromNewLocal,parentCogId);
+  CogId freshCogId() {
+    Int ret = fresh;
+    fresh = fresh + 1;
+    return ret;
   }
 
   // Rely on exception thrown in case of Nothing

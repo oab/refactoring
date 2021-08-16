@@ -16,14 +16,8 @@ interface DeptI {
   Unit setManager(SeenCogs x_s, PersonI m);
 }
 
-class Person(Bool x_fresh, CogMap x_m, Object x_parent, DeptI d) implements PersonI {
-  {
-    if(x_fresh) {
-      x_m.addFresh(this);
-    } else {
-      x_m.addSame(this,x_parent);
-    }
-  }
+class Person(CogId x_i, CogMap x_m, DeptI d) implements PersonI {
+  {  x_m.add(this,x_i); } 
 
   DeptI getDept(SeenCogs x_s) {
     CogId x_i = x_m.lookup(this);
@@ -46,19 +40,14 @@ class Person(Bool x_fresh, CogMap x_m, Object x_parent, DeptI d) implements Pers
   }
 }
 
-class Dept(Bool x_fresh, CogMap x_m, Object x_parent) implements DeptI {
+class Dept(CogId x_i, CogMap x_m) implements DeptI {
   PersonI m;
-  {
-   if(x_fresh) {
-      x_m.addFresh(this);
-    } else {
-      x_m.addSame(this,x_parent);
-    }
-  }
+  {  x_m.add(this,x_i); } 
   
   PersonI getManager(SeenCogs x_s) {
     CogId x_i = x_m.lookup(this);
     x_s = insertElement(x_s,x_i);   
+    
     return this.m;
   }
   Unit setManager(SeenCogs x_s, PersonI p) {
@@ -68,14 +57,8 @@ class Dept(Bool x_fresh, CogMap x_m, Object x_parent) implements DeptI {
   }
 }
 
-class Client(Bool x_fresh, CogMap x_m, Object x_parent) implements ClientI {
-  {
-    if(x_fresh) {
-      x_m.addFresh(this);
-    } else {
-      x_m.addSame(this,x_parent);
-    }
-  }
+class Client(CogId x_i, CogMap x_m) implements ClientI {
+  {  x_m.add(this,x_i); } 
 
     
   Unit enquire(SeenCogs x_s, Bool remote) {
@@ -85,14 +68,18 @@ class Client(Bool x_fresh, CogMap x_m, Object x_parent) implements ClientI {
     DeptI d;
 
     if ( remote ) {
-      d = new Dept(True, x_m, this);
+      CogId x_fresh0 = x_m.freshCogId();
+      d = new Dept(x_fresh0, x_m);
     } else {
-      d = new local Dept(False, x_m, this);
+      d = new local Dept(x_i, x_m);
     }
     
-    PersonI m = new Person(True, x_m, this, d);
-    PersonI p = new Person(True, x_m, this, d);
-
+    CogId x_fresh1 = x_m.freshCogId();
+    PersonI m = new Person(x_fresh1, x_m, d);
+    
+    CogId x_fresh2 = x_m.freshCogId();
+    PersonI p = new Person(x_fresh2, x_m, d);
+    
     d.setManager(x_s,m);
     m = p.getManager(x_s);
   }
@@ -100,8 +87,9 @@ class Client(Bool x_fresh, CogMap x_m, Object x_parent) implements ClientI {
 
 {
   CogMap x_m = new CogMapper();
-  x_m.addFresh(null);
+  CogId x_i = x_m.freshCogId();
   
-  ClientI c = new Client(True,x_m,null);
+  CogId x_fresh = x_m.freshCogId();  
+  ClientI c = new Client(x_fresh, x_m);
   c.enquire(set[],False);
 }
