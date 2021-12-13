@@ -57,10 +57,17 @@ class Dept(CogId x_i, CogMap x_m) implements DeptI {
   }
 }
 
+
+
+
 class Client(CogId x_i, CogMap x_m) implements ClientI {
   {  x_m.add(this,x_i); } 
 
-    
+  Unit run() {
+    println("actually happened");
+    assert x_m != null;
+  }
+  
   Unit enquire(SeenCogs x_s, Bool remote) {
     CogId x_i = x_m.lookup(this);
     x_s = insertElement(x_s,x_i);  
