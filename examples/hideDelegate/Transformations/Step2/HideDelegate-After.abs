@@ -1,58 +1,49 @@
 module HideDelegate;
 
 import * from CogTracking;
+import * from WaitFor;
 
 interface ClientI {
   Unit enquire(SeenCogs x_s, Bool rem);
 }
 
 interface PersonI {
-  DeptI getDept(SeenCogs x_s);
-  PersonI getManager(SeenCogs x_s);
+  DeptI getDept(Rel w4);
+  PersonI getManager(Rel W4);
 }
 
 interface DeptI {
-  PersonI getManager(SeenCogs x_s);
-  Unit setManager(SeenCogs x_s, PersonI m);
+  PersonI getManager(Rel w4);
+  Unit setManager(Rel w4, PersonI m);
 }
 
-class Person(CogId x_i, CogMap x_m, DeptI d) implements PersonI {
-  {  x_m.add(this,x_i); } 
+class Person(CogId thisCogId, CogMap cogs, DeptI d) implements PersonI {
+  {  cogs.add(this,thisCogId); } 
 
-  DeptI getDept(SeenCogs x_s) {
-    CogId x_i = x_m.lookup(this);
-    x_s = insertElement(x_s,x_i);   
-    
+  DeptI getDept(Rel w4) {
     return d;
   }
   
-  PersonI getManager(SeenCogs x_s) {
-    CogId x_i = x_m.lookup(this);
-    x_s = insertElement(x_s,x_i);  
-     
-    DeptI temp = this.getDept(x_s);
-    
-    // EXAMPLE ASSERT INSERTION, THIS SHOULD BE DONE PRIOR TO ANY CALL
-    CogId x_temp = x_m.lookup(temp);
-    assert x_i == x_temp ||  !contains(x_s,x_i);
+  PersonI getManager(Rel w4) {
+    DeptI temp = this.getDept(w4);
+        
+    CogId tempCogId = cogs.lookup(temp);
+    w4 = add(Pair(thisCogId,tempCogId));
+    Bool cf = cyclefree(w4);
+    assert cf;
           
-    return temp.getManager(x_s);
+    return temp.getManager(w4);
   }
 }
 
-class Dept(CogId x_i, CogMap x_m) implements DeptI {
+class Dept(CogId thisCogId, CogMap cogs) implements DeptI {
   PersonI m;
-  {  x_m.add(this,x_i); } 
+  {  cogs.add(this,thisCogId); } 
   
-  PersonI getManager(SeenCogs x_s) {
-    CogId x_i = x_m.lookup(this);
-    x_s = insertElement(x_s,x_i);   
-    
+  PersonI getManager(Rel w4) {
     return this.m;
   }
-  Unit setManager(SeenCogs x_s, PersonI p) {
-    CogId x_i = x_m.lookup(this);
-    x_s = insertElement(x_s,x_i);  
+  Unit setManager(Rel w4, PersonI p) {
     this.m = p;
   }
 }
@@ -60,43 +51,35 @@ class Dept(CogId x_i, CogMap x_m) implements DeptI {
 
 
 
-class Client(CogId x_i, CogMap x_m) implements ClientI {
-  {  x_m.add(this,x_i); } 
-
-  Unit run() {
-    println("actually happened");
-    assert x_m != null;
-  }
+class Client(CogId thisCogId, CogMap cogs) implements ClientI {
+  {  cogs.add(this,thisCogId); } 
   
-  Unit enquire(SeenCogs x_s, Bool remote) {
-    CogId x_i = x_m.lookup(this);
-    x_s = insertElement(x_s,x_i);  
-
+  Unit enquire(Rel w4, Bool remote) {
     DeptI d;
 
     if ( remote ) {
-      CogId x_fresh0 = x_m.freshCogId();
-      d = new Dept(x_fresh0, x_m);
+      CogId fresh0 = x_m.freshCogId();
+      d = new Dept(fresh0, cogs);
     } else {
-      d = new local Dept(x_i, x_m);
+        d = new local Dept(thisCogId, cogs);
     }
     
-    CogId x_fresh1 = x_m.freshCogId();
-    PersonI m = new Person(x_fresh1, x_m, d);
+    CogId fresh1 = cogs.freshCogId();
+    PersonI m = new Person(x_fresh1, cogs, d);
     
-    CogId x_fresh2 = x_m.freshCogId();
-    PersonI p = new Person(x_fresh2, x_m, d);
+    CogId fresh2 = cogs.freshCogId();
+    PersonI p = new Person(fresh2, cogs, d);
     
-    d.setManager(x_s,m);
-    m = p.getManager(x_s);
+    d.setManager(w4,m);
+    m = p.getManager(w4);
   }
 }
 
 {
-  CogMap x_m = new CogMapper();
-  CogId x_i = x_m.freshCogId();
+  CogMap cogs = new CogMapper();
+  CogId cog0 = cogs.freshCogId();
   
-  CogId x_fresh = x_m.freshCogId();  
-  ClientI c = new Client(x_fresh, x_m);
+  CogId fresh = cogs.freshCogId();  
+  ClientI c = new Client(fresh, cogs);
   c.enquire(set[],False);
 }
