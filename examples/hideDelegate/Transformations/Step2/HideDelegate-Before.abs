@@ -1,3 +1,5 @@
+// TODO properly add/remove w4 update to all calls
+
 module HideDelegate;
 
 import * from DeadlockChecking;

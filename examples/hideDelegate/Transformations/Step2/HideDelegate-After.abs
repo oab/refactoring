@@ -1,3 +1,5 @@
+// TODO properly add/remove w4 update to all calls
+
 module HideDelegate;
 import * from DeadlockChecking;
 
@@ -45,9 +47,6 @@ class Dept(CogId thisCogId, CogMap cogs) implements DeptI {
     this.m = p;
   }
 }
-
-
-
 
 class Client(CogId thisCogId, CogMap cogs) implements ClientI {
   {  cogs.add(this,thisCogId); } 
