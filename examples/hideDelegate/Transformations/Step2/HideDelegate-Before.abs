@@ -15,8 +15,8 @@ interface DeptI {
   Unit setManager(Rel w4, PersonI m);
 }
 
-class Person(CogId x_i, CogMap cogs, DeptI d) implements PersonI {
-  {  cogs.add(this,x_i); } 
+class Person(CogId thisCogId, CogMap cogs, DeptI d) implements PersonI {
+  {  cogs.add(this,thisCogId); } 
   
   DeptI getDept(Rel w4) {
     return d;
