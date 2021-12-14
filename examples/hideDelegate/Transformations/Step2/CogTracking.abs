@@ -1,31 +1,28 @@
 module CogTracking;
 export *;
 
-type CogId = Int;
-type SeenCogs = Set<CogId>;
-
 interface CogMap {
-  [Atomic] Unit add(Object fromNew, CogId i);
-  CogId freshCogId();
-  CogId lookup(Object o);
+  [Atomic] Unit add(Object fromNew, Int i);
+  Int freshCogId();
+  Int lookup(Object o);
 }
 
 class CogMapper implements CogMap {
   Int fresh = 0;
   Map<Object,Int> m = map[];
 
-  [Atomic] Unit add(Object o, CogId i) {
+  [Atomic] Unit add(Object o, Int i) {
     m = put(m,o,i);
   }
   
-  CogId freshCogId() {
+  Int freshCogId() {
     Int ret = fresh;
     fresh = fresh + 1;
     return ret;
   }
 
   // Rely on exception thrown in case of Nothing
-  CogId lookup(Object o) {
+  Int lookup(Object o) {
     return case lookup(m,o) {  Just(x) => x };
   }
 }

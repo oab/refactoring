@@ -1,0 +1,9 @@
+module DeadlockChecking;
+export *;
+import * from CogTracking;
+import * from WaitFor;
+export * from CogTracking;
+export * from WaitFor;
+
+type CogId = Int;
+type Rel = Set<Pair<Int,Int>>;

@@ -1,14 +1,10 @@
 module WaitFor;
 export *;
 
-type CogId = Int;
-type Rel = Set<Pair<CogId,CogId>>;
-
-
-def Rel add(Rel w4, Pair<CogId,CogId> e) = if fst(e) == snd(e) then w4 else insertElement(w4,e);
+def Set<Pair<Int,Int>> add(Set<Pair<Int,Int>> w4, Pair<Int,Int> e) = when fst(e) == snd(e) then w4 else insertElement(w4,e);
         
-def Rel rem(Rel w4, Pair<CogId,CogId> e) = remove(w4,e);
+def Set<Pair<Int,Int>> rem(Set<Pair<Int,Int>> w4, Pair<Int,Int> e) = remove(w4,e);
 
 //unimplemented
-def Bool cyclefree(Rel w4) = True;
+def Bool cyclefree(Set<Pair<Int,Int>> w4) = True;
 

@@ -1,15 +1,13 @@
 module HideDelegate;
-
-import * from CogTracking;
-import * from WaitFor;
+import * from DeadlockChecking;
 
 interface ClientI {
-  Unit enquire(SeenCogs x_s, Bool rem);
+  Unit enquire(Rel w4, Bool rem);
 }
 
 interface PersonI {
   DeptI getDept(Rel w4);
-  PersonI getManager(Rel W4);
+  PersonI getManager(Rel w4);
 }
 
 interface DeptI {
@@ -28,7 +26,7 @@ class Person(CogId thisCogId, CogMap cogs, DeptI d) implements PersonI {
     DeptI temp = this.getDept(w4);
         
     CogId tempCogId = cogs.lookup(temp);
-    w4 = add(Pair(thisCogId,tempCogId));
+    w4 = add(w4,Pair(thisCogId,tempCogId));
     Bool cf = cyclefree(w4);
     assert cf;
           
@@ -58,14 +56,14 @@ class Client(CogId thisCogId, CogMap cogs) implements ClientI {
     DeptI d;
 
     if ( remote ) {
-      CogId fresh0 = x_m.freshCogId();
+      CogId fresh0 = cogs.freshCogId();
       d = new Dept(fresh0, cogs);
     } else {
         d = new local Dept(thisCogId, cogs);
     }
     
     CogId fresh1 = cogs.freshCogId();
-    PersonI m = new Person(x_fresh1, cogs, d);
+    PersonI m = new Person(fresh1, cogs, d);
     
     CogId fresh2 = cogs.freshCogId();
     PersonI p = new Person(fresh2, cogs, d);
