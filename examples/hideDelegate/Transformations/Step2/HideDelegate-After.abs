@@ -1,5 +1,3 @@
-// TODO properly add/remove w4 update to all calls
-
 module HideDelegate;
 import * from DeadlockChecking;
 
@@ -58,7 +56,7 @@ class Client(CogId thisCogId, CogMap cogs) implements ClientI {
       CogId fresh0 = cogs.freshCogId();
       d = new Dept(fresh0, cogs);
     } else {
-        d = new local Dept(thisCogId, cogs);
+      d = new local Dept(thisCogId, cogs);
     }
     
     CogId fresh1 = cogs.freshCogId();
@@ -66,17 +64,39 @@ class Client(CogId thisCogId, CogMap cogs) implements ClientI {
     
     CogId fresh2 = cogs.freshCogId();
     PersonI p = new Person(fresh2, cogs, d);
-    
+
+
+    CogId dCogId = cogs.lookup(d);
+    w4 = add(w4,Pair(thisCogId,dCogId));
+    Bool cf = cyclefree(w4);
+    assert cf;
+
     d.setManager(w4,m);
+    w4 = rem(w4,Pair(thisCogId,dCogId));
+
+    CogId pCogId = cogs.lookup(p);
+    w4 = add(w4,Pair(thisCogId,pCogId));
+    cf = cyclefree(w4);
+    assert cf;
+    
     m = p.getManager(w4);
+    w4 = rem(w4,Pair(thisCogId,pCogId));
   }
 }
 
 {
   CogMap cogs = new CogMapper();
   CogId cog0 = cogs.freshCogId();
-  
-  CogId fresh = cogs.freshCogId();  
+  CogId fresh = cogs.freshCogId();
+  Rel w4 = set[];
+
   ClientI c = new Client(fresh, cogs);
+
+  CogId cCogId = cogs.lookup(c);
+  w4 = add(w4,Pair(cog0,cCogId));
+  Bool cf = cyclefree(w4);
+  assert cf;
+
   c.enquire(set[],False);
+  w4 = rem(w4,Pair(cog0,cCogId));
 }
