@@ -87,9 +87,9 @@ class Client(CogId thisCogId, CogMap cogs) implements ClientI {
 {
   CogMap cogs = new CogMapper();
   CogId cog0 = cogs.freshCogId();
-  CogId fresh = cogs.freshCogId();
   Rel w4 = set[];
 
+  CogId fresh = cogs.freshCogId();
   ClientI c = new Client(fresh, cogs);
 
   CogId cCogId = cogs.lookup(c);
