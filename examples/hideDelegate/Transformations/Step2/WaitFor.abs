@@ -5,6 +5,117 @@ def Set<Pair<Int,Int>> add(Set<Pair<Int,Int>> w4, Pair<Int,Int> e) = when fst(e)
         
 def Set<Pair<Int,Int>> rem(Set<Pair<Int,Int>> w4, Pair<Int,Int> e) = remove(w4,e);
 
-//unimplemented
-def Bool cyclefree(Set<Pair<Int,Int>> w4) = True;
+def Set<Int> no_incoming(List<Pair<Int,Int>> w4) =
+    let (List<Int> left) = map((Pair<Int,Int> x) => fst(x))(w4),
+        (List<Int> right) = map((Pair<Int,Int> x) => snd(x))(w4)
+    in fromList(no_incoming_helper(left,right));
 
+def List<Int> no_incoming_helper(List<Int> left, List<Int> right) =
+    case (right) {
+      Nil => left |
+      Cons(i,r) => no_incoming_helper(without(left,i),r)
+    };
+
+def Set<A> fromList<A>(List<A> l) = fromList_helper(l,set[]);
+def Set<A> fromList_helper<A>(List<A> l,Set<A> s) =
+    case (l) {
+      Nil => s |
+      Cons(i,r) => fromList_helper(r,insertElement(s,i))
+    };
+
+def Bool has_incoming(List<Pair<Int,Int>> w4, Int n) = case (w4) {
+  Nil => False |
+  Cons(Pair(_,m),r) => when n==m then True else has_incoming(r,n)
+};
+
+def Set<Int> update(List<Pair<Int,Int>> w4, Set<Int> s, List<Int> m) = case (m) {
+  Nil => s |
+  Cons(i,r) => when has_incoming(w4,i) then update(w4,s,r) else update(w4,insertElement(s,i),r)
+};
+
+
+def Maybe<List<Int>> toposort(Set<Pair<Int,Int>> w4) = toposort_helper(elements(w4),list[],no_incoming(elements(w4)));
+def Maybe<List<Int>> toposort_helper(List<Pair<Int,Int>> w4, List<Int> l, Set<Int> s) =
+    when (emptySet(s))
+    then when (isEmpty(w4)) then Just(l) else Nothing
+    else let (Int n) = take(s),
+             (Set<Int> ss) = remove(s,n),
+             (List<Pair<Int,Int>> no_nm ) = filter((Pair<Int,Int> e) => fst(e) != n )(w4),
+             (List<Int> all_m ) = map(snd)(filter((Pair<Int,Int> e) => fst(e) == n )(w4)),
+             (Set<Int> new_s) = update(no_nm,ss,all_m)
+             in toposort_helper(no_nm,Cons(n,l),new_s);
+
+             
+def Bool cyclefree(Set<Pair<Int,Int>> w4) = case
+    (toposort(w4)) {
+     Nothing => False |
+      _ => True
+    };
+
+
+//can't be used, too annoying to refactor to functional style
+/*
+class Graph(Set<Pair<Int,Int>> w4) {
+  Map<Int, List<Int>> nodes = map[];
+  Set<Int> permanent_mark = set[];
+  Set<Int> temporary_mark = set[];
+  Set<Int> no_mark = set[];
+  List<Int> sorted = list[];
+  Bool cyclic = False;
+    
+  Unit makegraph() {
+      List<Pair<Int,Int>> edges = elements(w4);
+      foreach (p in edges) {
+          Int node1 = fst(p);
+          Int node2 = snd(p);
+          Maybe<List<Int>> madjToNode1 = lookup(nodes,node1);
+          switch (madjToNode1) {
+              Nothing => {
+                  nodes = insert(nodes,Pair(node1,list[node2]));
+                  no_mark = insertElement(no_mark,node1);
+              }
+              Just(oldAdjToNode1) => {
+                  List<Int> newAdjToNode1 = Cons(node2,oldAdjToNode1);
+                  nodes = insert(nodes,Pair(node1,newAdjToNode1));
+              }
+          }
+
+          Maybe<List<Int>> madjToNode2 = lookup(nodes,node2);
+          switch (madjToNode2) {
+              Nothing => {
+                  nodes = insert(nodes,Pair(node2,list[]));
+                  no_mark = insertElement(no_mark,node2);
+              }
+              Just(oldAdjToNode2) => skip;
+          }
+      }
+  }
+   
+  Unit check_cyclic() {
+    List<Int> check = list[];
+    while(!emptySet(no_mark) || !emptySet(temporary_mark) ) {
+      Int n = take(no_mark);
+      this.visit(n);
+    }
+    
+  }
+
+  Unit visit(Int n) {
+      if(contains(permanent_mark,n)) skip;
+      else {
+        if(contains(temporary_mark,n)) {
+          cyclic = True;
+        } else {
+          no_mark = remove(no_mark,n);
+          temporary_mark = insertElement(temporary_mark,n);
+          foreach (m in lookupUnsafe(nodes,n)) {
+            this.visit(m);    
+          }
+          temporary_mark = remove(temporary_mark,n);
+          permanent_mark = insertElement(permanent_mark,n);
+          sorted = Cons(n,sorted);
+        }
+      }
+  }
+}
+*/
