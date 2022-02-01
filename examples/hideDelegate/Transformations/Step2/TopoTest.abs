@@ -1,0 +1,9 @@
+module TopoTest;
+import * from WaitFor;
+
+
+// TODO write some proper testing
+{
+  Set<Pair<Int,Int>> w4 = set[Pair(5,11),Pair(11,2),Pair(11,9),Pair(11,10),Pair(7,11),Pair(7,8),Pair(8,9),Pair(3,8),Pair(3,10)];
+  println(toString(toposort(w4)));
+}
