@@ -1,53 +1,77 @@
 module WaitFor;
 export *;
 
-def Set<Pair<Int,Int>> add(Set<Pair<Int,Int>> w4, Pair<Int,Int> e) = when fst(e) == snd(e) then w4 else insertElement(w4,e);
+
+type Node = Int;
+type Rel = Set<Pair<Node,Node>>;
+type NodeSet = Set<Node>;
+type NodeList = List<Node>;
+type Edge = Pair<Node,Node>;
+    
+def Rel add(Rel w4, Edge e) =
+ when fst(e) == snd(e)
+ then w4
+ else insertElement(w4,e);
         
-def Set<Pair<Int,Int>> rem(Set<Pair<Int,Int>> w4, Pair<Int,Int> e) = remove(w4,e);
+def Rel rem(Rel w4, Edge e) =
+    remove(w4,e);
 
-def Set<Int> no_incoming(List<Pair<Int,Int>> w4) =
-    let (List<Int> left) = map((Pair<Int,Int> x) => fst(x))(w4),
-        (List<Int> right) = map((Pair<Int,Int> x) => snd(x))(w4)
-    in fromList(no_incoming_helper(left,right));
+def Pair<NodeSet,NodeSet> extract(Rel w4) = extract_helper(w4,set[],set[]);
+def Pair<NodeSet,NodeSet> extract_helper(Rel w4, NodeSet l, NodeSet r) =
+  when hasNext(w4)
+  then case next(w4) {
+    Pair(w4subset,e) => extract_helper(w4subset,insertElement(l,fst(e)),insertElement(r,snd(e)))
+  }
+  else Pair(l,r);
 
-def List<Int> no_incoming_helper(List<Int> left, List<Int> right) =
-    case (right) {
-      Nil => left |
-      Cons(i,r) => no_incoming_helper(without(left,i),r)
-    };
+def Pair<Rel,NodeSet> partition(Rel w4,Int n) = partition_helper(w4,n,set[],set[]);
+def Pair<Rel,NodeSet> partition_helper(Rel w4, Int n, Rel no_nm, NodeSet m_in_nm) =
+  when hasNext(w4)
+  then case next(w4) {
+    Pair(w4subset,e) => when fst(e) != n
+                        then partition_helper(w4subset,n,insertElement(no_nm,e),m_in_nm)
+                        else partition_helper(w4subset,n,no_nm,insertElement(m_in_nm,snd(e)))
+    }
+ else Pair(no_nm,m_in_nm);
 
-def Set<A> fromList<A>(List<A> l) = fromList_helper(l,set[]);
-def Set<A> fromList_helper<A>(List<A> l,Set<A> s) =
-    case (l) {
-      Nil => s |
-      Cons(i,r) => fromList_helper(r,insertElement(s,i))
-    };
+def NodeSet no_incoming(Rel w4) =
+  case extract(w4) {
+    Pair(l,r) => difference(l,r)
+  };
 
-def Bool has_incoming(List<Pair<Int,Int>> w4, Int n) = case (w4) {
-  Nil => False |
-  Cons(Pair(_,m),r) => when n==m then True else has_incoming(r,n)
-};
+def Bool has_incoming(Rel w4, Int n) =
+  when hasNext(w4)
+  then case next(w4)  {
+    Pair(w4subset,edge) => snd(edge) == n || has_incoming(w4subset,n)
+  }
+  else False;
 
-def Set<Int> update(List<Pair<Int,Int>> w4, Set<Int> s, List<Int> m) = case (m) {
-  Nil => s |
-  Cons(i,r) => when has_incoming(w4,i) then update(w4,s,r) else update(w4,insertElement(s,i),r)
-};
+def NodeSet update(Rel w4, NodeSet s, NodeSet m) =
+  when hasNext(m) 
+  then case next(m) {
+   Pair(msubset,e) => when has_incoming(w4,e)
+                      then update(w4,s,msubset)
+                      else update(w4,insertElement(s,e),msubset)    
+   }
+   else s;
 
-
-def Maybe<List<Int>> toposort(Set<Pair<Int,Int>> w4) = toposort_helper(elements(w4),list[],no_incoming(elements(w4)));
-def Maybe<List<Int>> toposort_helper(List<Pair<Int,Int>> w4, List<Int> l, Set<Int> s) =
-    when (emptySet(s))
-    then when (isEmpty(w4)) then Just(l) else Nothing
-    else let (Int n) = take(s),
-             (Set<Int> ss) = remove(s,n),
-             (List<Pair<Int,Int>> no_nm ) = filter((Pair<Int,Int> e) => fst(e) != n )(w4),
-             (List<Int> all_m ) = map(snd)(filter((Pair<Int,Int> e) => fst(e) == n )(w4)),
-             (Set<Int> new_s) = update(no_nm,ss,all_m)
-             in toposort_helper(no_nm,Cons(n,l),new_s);
+def Maybe<NodeList> toposort(Rel w4) = toposort_helper(w4,list[],no_incoming(w4));
+def Maybe<NodeList> toposort_helper(Rel w4, NodeList sorted, NodeSet non_incoming) =
+    when emptySet(non_incoming)
+    then when emptySet(w4)
+         then Just(sorted)
+         else Nothing
+    else let (Node n) = take(non_incoming)
+         in case partition(w4,n) {
+           Pair(no_nm, m_in_nm) =>
+             let (NodeSet new_non_incoming) = update(no_nm, remove(non_incoming, n), m_in_nm)
+             in toposort_helper(no_nm, Cons(n, sorted), new_non_incoming)
+           };
 
              
-def Bool cyclefree(Set<Pair<Int,Int>> w4) = case
-    (toposort(w4)) {
+def Bool cyclefree(Rel w4) =
+  case toposort(w4) {
      Nothing => False |
       _ => True
     };
+
