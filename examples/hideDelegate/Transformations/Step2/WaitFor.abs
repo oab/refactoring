@@ -1,7 +1,6 @@
 module WaitFor;
 export *;
 
-
 type Node = Int;
 type Rel = Set<Pair<Node,Node>>;
 type NodeSet = Set<Node>;
@@ -67,7 +66,6 @@ def Maybe<NodeList> toposort_helper(Rel w4, NodeList sorted, NodeSet non_incomin
              let (NodeSet new_non_incoming) = update(no_nm, remove(non_incoming, n), m_in_nm)
              in toposort_helper(no_nm, Cons(n, sorted), new_non_incoming)
            };
-
              
 def Bool cyclefree(Rel w4) =
   case toposort(w4) {

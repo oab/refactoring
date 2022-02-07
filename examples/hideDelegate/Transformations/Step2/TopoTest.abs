@@ -1,9 +1,71 @@
 module TopoTest;
 import * from WaitFor;
 
+def List<Int> iota(Int n) = go_iota(1,n);
+def List<Int> go_iota(Int i, Int n) = when i<=n then Cons(i,go_iota(i+1,n)) else Nil;
 
-// TODO write some proper testing
+def Int div(Int n, Int m) = truncate(n/m);
+
+//Bool list representation of n using s Bools
+def List<Bool> repr(Int n, Int s) = go_repr(n,s,list[]);
+def List<Bool> go_repr(Int n, Int s, List<Bool> r) =
+    when s>0 then go_repr(div(n,2), s-1,Cons((n%2)==1,r)) else r;
+
+def Int factorial(Int n) = foldl((Int i,Int j)=>i*j)(iota(n),1);
+
+// All non-single loop indices
+def List<Pair<Int,Int>> pairs(Int size) =
+  let (List<Pair<Int,Int>> all_pairs) = map((Int i)=>Pair(div(i-1,size)+1,(i-1)%size+1))(iota(size*size))
+  in filter((Pair<Int,Int> p) => fst(p) != snd(p))(all_pairs);
+
+def Set<Pair<Int,Int>> select(List<Bool> l, List<Pair<Int,Int>> i) = go_select(l,i,set[]);    
+def Set<Pair<Int,Int>> go_select(List<Bool> l, List<Pair<Int,Int>> i, Set<Pair<Int,Int>> keep) =
+  case l {
+    Nil => keep |
+    Cons(b,r) => when b
+                 then go_select(r,tail(i),insertElement(keep,head(i)))
+                 else go_select(r,tail(i),keep)
+  };
+    
+def Int graphs(Int size) = truncate(pow(2,size*(size-1)));
+
+// For some quick testing, generate all graphs
+// could probably check that detected cyclic graphs here
+// correspond to what is expected
+class Graphs(Int size) {
+  List<Pair<Int,Int>> pairs = pairs(size);
+  Int max = graphs(size);
+  Int current=0;
+  Int found=0;
+
+  Unit run() {
+    println(`checking $max$ graphs`);  
+
+    while(current < max) {
+      Set<Pair<Int,Int>> kept = select(repr(current,size*(size-1)),pairs);
+      println(toString(kept));  
+      if(!cyclefree(kept)) {
+        println(`Cyclic: $kept$`);    
+          
+        found = found+1;
+      } else {
+        println(`Non-cyclic: $kept$`);    
+      }
+      current = current+1;
+    }
+    println(`Found $found$ graphs with cycles`);  
+    
+  }
+}
+
+
 {
+
+  
+  Object g = new Graphs(3);
+
   Set<Pair<Int,Int>> w4 = set[Pair(5,11),Pair(11,2),Pair(11,9),Pair(11,10),Pair(7,11),Pair(7,8),Pair(8,9),Pair(3,8),Pair(3,10)];
   println(toString(toposort(w4)));
+  
+  
 }
