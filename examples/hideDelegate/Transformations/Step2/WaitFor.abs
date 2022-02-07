@@ -54,6 +54,7 @@ def NodeSet update(Rel w4, NodeSet s, NodeSet m) =
    }
    else s;
 
+
 def Maybe<NodeList> toposort(Rel w4) = toposort_helper(w4,list[],no_incoming(w4));
 def Maybe<NodeList> toposort_helper(Rel w4, NodeList sorted, NodeSet non_incoming) =
     when emptySet(non_incoming)
@@ -66,7 +67,12 @@ def Maybe<NodeList> toposort_helper(Rel w4, NodeList sorted, NodeSet non_incomin
              let (NodeSet new_non_incoming) = update(no_nm, remove(non_incoming, n), m_in_nm)
              in toposort_helper(no_nm, Cons(n, sorted), new_non_incoming)
            };
-             
+
+
+// Cycle detection by finding a topological sort
+// a practical version of this should be incremental
+// i.e. maintain additional state in w4 so we do not
+// do so much work at each callsite
 def Bool cyclefree(Rel w4) =
   case toposort(w4) {
      Nothing => False |
