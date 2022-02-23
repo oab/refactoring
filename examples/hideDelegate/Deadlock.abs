@@ -1,0 +1,21 @@
+module Deadlock;
+
+interface Deadlocker {
+  Unit deadlock();
+}
+
+class D() implements Deadlocker {
+  Unit deadlock() {
+    Fut<Unit> f = this!m(); 
+    Unit x = f.get;
+  }
+  Unit m(){
+  
+  }
+}
+
+{
+  Deadlocker o = new D();
+  o.deadlock();
+}
+
